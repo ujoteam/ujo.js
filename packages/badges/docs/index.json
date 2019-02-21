@@ -1,0 +1,340 @@
+[
+  {
+    "__docId__": 0,
+    "kind": "file",
+    "name": "src/doc.js",
+    "content": "/**\n * the initializeBadges method provides an API for interacting with ujo patronage badges\n * @param {Object} ujoConfig - the config object returned by ujoInit @see [link]\n * @returns {Object} - an interface for interacting with badges\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit('http://127.0.0.1:8545')\n * const ujoBadges = await initializeBadges(ujoConfig)\n */\nexport default async function initializeBadges(ujoConfig) {}\n\n/**\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n */\nfunction getBadgeContract() {}\n/**\n * getAllBadges is a getter method for every single badge in the proxy contract\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgeContract()\n */\nfunction getAllBadges() {}\n\n/**\n * getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address\n * @param {string} ethereumAddress - the ethereum address owner of returned badges\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')\n */\nfunction getBadgesOwnedByAddress() {}\n\n/**\n * getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address\n * @param {string} uniqueId - the unique id that the badge represents (in our case it's an IPFS cid)\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')\n */\nfunction getBadgesMintedFor() {}\n\n// meant to get more information about the badges\n// returns transaction receipt along with formatted badge data @ prop 'badge'\n// const badge = await ujoBadges.getBadge()\n// badge.data\n// returns null if transaction has not been mined to chain yet\n/**\n * getBadge is a getter method for a single badge\n * @param {string} txHash - the transaction hash of the badge minting\n * @returns {Promise<Object, Error>} a single badge object\n * @todo decide on this object ^^\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')\n */\nfunction getBadge() {}\n",
+    "static": true,
+    "longname": "/Users/jpschwartz/Documents/ConsenSys/Ujo/ujo-js/ujo.js/packages/badges/src/doc.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 1,
+    "kind": "function",
+    "name": "initializeBadges",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": true,
+    "static": true,
+    "longname": "src/doc.js~initializeBadges",
+    "access": null,
+    "export": true,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": "initializeBadges",
+    "description": "the initializeBadges method provides an API for interacting with ujo patronage badges",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit('http://127.0.0.1:8545')\nconst ujoBadges = await initializeBadges(ujoConfig)"
+    ],
+    "lineNumber": 11,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Object} - an interface for interacting with badges"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "Object"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "ujoConfig",
+        "description": "the config object returned by ujoInit @see [link]"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": "an interface for interacting with badges"
+    }
+  },
+  {
+    "__docId__": 2,
+    "kind": "function",
+    "name": "getBadgeContract",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/doc.js~getBadgeContract",
+    "access": null,
+    "export": false,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": null,
+    "description": "getBadgeContract is a getter method for the ujo badges contract",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit(<Web3Provider>)\nconst ujoBadges = await initializeBadges(ujoConfig)\nconst badgeContract = ujoBadges.getBadgeContract()"
+    ],
+    "lineNumber": 23,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Object} instance of the proxy ujo badges truffle contract"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Object"
+      ],
+      "spread": false,
+      "description": "instance of the proxy ujo badges truffle contract"
+    }
+  },
+  {
+    "__docId__": 3,
+    "kind": "function",
+    "name": "getAllBadges",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/doc.js~getAllBadges",
+    "access": null,
+    "export": false,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": null,
+    "description": "getAllBadges is a getter method for every single badge in the proxy contract",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit(<Web3Provider>)\nconst ujoBadges = await initializeBadges(ujoConfig)\nconst badges = await ujoBadges.getBadgeContract()"
+    ],
+    "lineNumber": 34,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object[], Error>"
+      ],
+      "spread": false,
+      "description": "an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+    }
+  },
+  {
+    "__docId__": 4,
+    "kind": "function",
+    "name": "getBadgesOwnedByAddress",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/doc.js~getBadgesOwnedByAddress",
+    "access": null,
+    "export": false,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": null,
+    "description": "getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit(<Web3Provider>)\nconst ujoBadges = await initializeBadges(ujoConfig)\nconst badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')"
+    ],
+    "lineNumber": 47,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "ethereumAddress",
+        "description": "the ethereum address owner of returned badges"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object[], Error>"
+      ],
+      "spread": false,
+      "description": "an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+    }
+  },
+  {
+    "__docId__": 5,
+    "kind": "function",
+    "name": "getBadgesMintedFor",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/doc.js~getBadgesMintedFor",
+    "access": null,
+    "export": false,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": null,
+    "description": "getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit(<Web3Provider>)\nconst ujoBadges = await initializeBadges(ujoConfig)\nconst badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')"
+    ],
+    "lineNumber": 60,
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "uniqueId",
+        "description": "the unique id that the badge represents (in our case it's an IPFS cid)"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object[], Error>"
+      ],
+      "spread": false,
+      "description": "an array of badges. See {@link getBadge} for what each badge looks like in the returned array"
+    }
+  },
+  {
+    "__docId__": 6,
+    "kind": "function",
+    "name": "getBadge",
+    "memberof": "src/doc.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/doc.js~getBadge",
+    "access": null,
+    "export": false,
+    "importPath": "@ujomusic/badges/src/doc.js",
+    "importStyle": null,
+    "description": "getBadge is a getter method for a single badge",
+    "examples": [
+      "import ujoInit from 'ujo.js/config'\nconst ujoConfig = ujoInit(<Web3Provider>)\nconst ujoBadges = await initializeBadges(ujoConfig)\nconst badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')"
+    ],
+    "lineNumber": 79,
+    "todo": [
+      "decide on this object ^^"
+    ],
+    "unknown": [
+      {
+        "tagName": "@returns",
+        "tagValue": "{Promise<Object, Error>} a single badge object"
+      }
+    ],
+    "params": [
+      {
+        "nullable": null,
+        "types": [
+          "string"
+        ],
+        "spread": false,
+        "optional": false,
+        "name": "txHash",
+        "description": "the transaction hash of the badge minting"
+      }
+    ],
+    "return": {
+      "nullable": null,
+      "types": [
+        "Promise<Object, Error>"
+      ],
+      "spread": false,
+      "description": "a single badge object"
+    }
+  },
+  {
+    "__docId__": 7,
+    "kind": "file",
+    "name": "src/helpers.js",
+    "content": "import ethUtil from 'ethereumjs-util';\nimport flat from 'array.prototype.flat';\nimport moment from 'moment';\n\nexport const decodeTxData = eventData =>\n  // flattens the array and then decodes the values\n  flat(eventData).map(({ transactionHash, args: { nftcid, timeMinted } }) => [\n    nftcid,\n    moment\n      .unix(timeMinted.toString())\n      .utc()\n      .format('MMMM Do, YYYY'),\n    transactionHash,\n  ]);\n\nexport function convertBadgeIdsToHex(badgeArray, padLeft) {\n  return badgeArray.map(ethUtil.intToHex).map(hexString => padLeft(hexString, 64));\n}\n\nexport function determineStartBlock(networkId) {\n  switch (Number(networkId)) {\n    // if on mainnet, start event log search on block...\n    case 1:\n      return 6442621;\n    // if on rinkeby, start event log search on block...\n    case 4:\n      return 3068896;\n    // if not on mainnet or rinkeby just start on block 0\n    default:\n      return 0;\n  }\n}\n",
+    "static": true,
+    "longname": "/Users/jpschwartz/Documents/ConsenSys/Ujo/ujo-js/ujo.js/packages/badges/src/helpers.js",
+    "access": null,
+    "description": null,
+    "lineNumber": 1
+  },
+  {
+    "__docId__": 8,
+    "kind": "function",
+    "name": "decodeTxData",
+    "memberof": "src/helpers.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/helpers.js~decodeTxData",
+    "access": null,
+    "export": true,
+    "importPath": "@ujomusic/badges/src/helpers.js",
+    "importStyle": "{decodeTxData}",
+    "description": null,
+    "lineNumber": 5,
+    "undocument": true
+  },
+  {
+    "__docId__": 9,
+    "kind": "function",
+    "name": "convertBadgeIdsToHex",
+    "memberof": "src/helpers.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/helpers.js~convertBadgeIdsToHex",
+    "access": null,
+    "export": true,
+    "importPath": "@ujomusic/badges/src/helpers.js",
+    "importStyle": "{convertBadgeIdsToHex}",
+    "description": null,
+    "lineNumber": 16,
+    "undocument": true
+  },
+  {
+    "__docId__": 10,
+    "kind": "function",
+    "name": "determineStartBlock",
+    "memberof": "src/helpers.js",
+    "generator": false,
+    "async": false,
+    "static": true,
+    "longname": "src/helpers.js~determineStartBlock",
+    "access": null,
+    "export": true,
+    "importPath": "@ujomusic/badges/src/helpers.js",
+    "importStyle": "{determineStartBlock}",
+    "description": null,
+    "lineNumber": 20,
+    "undocument": true
+  },
+  {
+    "kind": "index",
+    "content": "",
+    "longname": "/Users/jpschwartz/Documents/ConsenSys/Ujo/ujo-js/ujo.js/packages/badges/README.md",
+    "name": "./README.md",
+    "static": true,
+    "access": "public"
+  },
+  {
+    "kind": "packageJSON",
+    "content": "{\n  \"name\": \"@ujomusic/badges\",\n  \"version\": \"0.0.0\",\n  \"main\": \"dist/index.js\",\n  \"scripts\": {\n    \"build\": \"babel src -d dist -s\",\n    \"build:docs\": \"esdoc -c .esdoc.json\"\n  },\n  \"dependencies\": {\n    \"array.prototype.flat\": \"^1.2.1\",\n    \"ethereumjs-util\": \"^6.0.0\",\n    \"moment\": \"^2.23.0\",\n    \"truffle-contract\": \"^4.0.0-beta.0\",\n    \"ujo-contracts-badges\": \"git+ssh://git@github.com:UjoTeam/contracts-badges.git#master\",\n    \"web3\": \"^1.0.0-beta.37\"\n  }\n}\n",
+    "longname": "/Users/jpschwartz/Documents/ConsenSys/Ujo/ujo-js/ujo.js/packages/badges/package.json",
+    "name": "package.json",
+    "static": true,
+    "access": "public"
+  }
+]

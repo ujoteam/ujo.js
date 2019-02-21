@@ -1,0 +1,42 @@
+{
+  "name": "@ujomusic/contracts-licensing",
+  "version": "0.0.0",
+  "description": "The Ujo Handler Contracts",
+  "main": "index.js",
+  "scripts": {
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "lint": "npm run lint:js && npm run lint:sol",
+    "lint:js": "eslint test/**/*.js test/*.js migrations/*.js",
+    "lint:sol": "solhint contracts/*.sol",
+    "pretest": "npm run lint",
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UjoTeam/contracts-handlers.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/UjoTeam/contracts-handlers/issues"
+  },
+  "homepage": "https://github.com/UjoTeam/contracts-handlers#readme",
+  "dependencies": {
+    "bignumber.js": "^6.0.0",
+    "dotenv": "^6.2.0",
+    "truffle": "5.0.3",
+    "truffle-contract": "3.0.1",
+    "truffle-hdwallet-provider": "0.0.3"
+  },
+  "devDependencies": {
+    "dotenv": "^6.2.0",
+    "eslint": "4.13.1",
+    "eslint-config-airbnb": "16.1.0",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-jsx-a11y": "6.0.3",
+    "eslint-plugin-react": "7.5.1",
+    "eth-gas-reporter": "^0.1.7",
+    "solhint": "1.2.1",
+    "solidity-coverage": "^0.5.4"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@ujomusic/badges",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel src -d dist -s",
+    "build:docs": "esdoc -c .esdoc.json",
+    "test": "NODE_ENV=TEST ../../node_modules/.bin/mocha ./test --require @babel/register --trace-warnings --exit --colors --recursive --reporter spec"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "array.prototype.flat": "^1.2.1",
+    "axios": "^0.18.0",
+    "ethereumjs-util": "^6.0.0",
+    "moment": "^2.23.0",
+    "web3-utils": "1.0.0-beta.37"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0"
+  }
+}

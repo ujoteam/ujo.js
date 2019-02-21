@@ -1,0 +1,26 @@
+{
+  "extends": ["airbnb", "plugin:prettier/recommended"],
+  "plugins": ["react", "jsx-a11y", "import"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 8,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "env": {
+    "node": true,
+    "mocha": true,
+    "es6": true
+  },
+  "globals": {
+    "assert": true,
+    "it": true,
+    "bef: true,ore": true,
+    "beforeE: true,ach": true,
+    "artifacts": true,
+    "contract": true,
+    "web3": true
+  }
+}

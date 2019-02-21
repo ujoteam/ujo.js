@@ -1,0 +1,43 @@
+{
+  "name": "@ujomusic/contracts-oracle",
+  "version": "1.0.0",
+  "description": "The Ujo Oracle Contract",
+  "main": "index.js",
+  "scripts": {
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "lint": "npm run lint:js && npm run lint:sol",
+    "lint:js": "eslint test/**/*.js test/*.js migrations/*.js",
+    "lint:sol": "solhint contracts/*.sol",
+    "pretest": "npm run lint",
+    "test": "truffle test --network ganachecli"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UjoTeam/contracts-oracle.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/UjoTeam/contracts-oracle/issues"
+  },
+  "homepage": "https://github.com/UjoTeam/contracts-oracle#readme",
+  "dependencies": {
+    "bignumber.js": "^6.0.0",
+    "truffle": "5.0.2",
+    "truffle-contract": "3.0.1",
+    "truffle-hdwallet-provider": "0.0.3",
+    "web3-utils": "1.0.0-beta.37"
+  },
+  "devDependencies": {
+    "eslint": "4.13.1",
+    "eslint-config-airbnb": "16.1.0",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-jsx-a11y": "6.0.3",
+    "eslint-plugin-react": "7.5.1",
+    "eth-gas-reporter": "^0.1.7",
+    "ethereum-bridge": "git+ssh://git@github.com:oraclize/ethereum-bridge.git#1f837fe",
+    "ganache-cli": "^6.1.0",
+    "solhint": "1.2.1",
+    "solidity-coverage": "0.5.11"
+  }
+}

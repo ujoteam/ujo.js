@@ -1,0 +1,2202 @@
+{
+  "type": "File",
+  "start": 0,
+  "end": 3363,
+  "loc": {
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 80,
+      "column": 0
+    }
+  },
+  "program": {
+    "type": "Program",
+    "start": 0,
+    "end": 3363,
+    "loc": {
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 80,
+        "column": 0
+      }
+    },
+    "sourceType": "module",
+    "body": [
+      {
+        "type": "ExportDefaultDeclaration",
+        "start": 405,
+        "end": 465,
+        "loc": {
+          "start": {
+            "line": 11,
+            "column": 0
+          },
+          "end": {
+            "line": 11,
+            "column": 60
+          }
+        },
+        "declaration": {
+          "type": "FunctionExpression",
+          "start": 420,
+          "end": 465,
+          "loc": {
+            "start": {
+              "line": 11,
+              "column": 15
+            },
+            "end": {
+              "line": 11,
+              "column": 60
+            }
+          },
+          "id": {
+            "type": "Identifier",
+            "start": 435,
+            "end": 451,
+            "loc": {
+              "start": {
+                "line": 11,
+                "column": 30
+              },
+              "end": {
+                "line": 11,
+                "column": 46
+              },
+              "identifierName": "initializeBadges"
+            },
+            "name": "initializeBadges"
+          },
+          "generator": false,
+          "expression": false,
+          "async": true,
+          "params": [
+            {
+              "type": "Identifier",
+              "start": 452,
+              "end": 461,
+              "loc": {
+                "start": {
+                  "line": 11,
+                  "column": 47
+                },
+                "end": {
+                  "line": 11,
+                  "column": 56
+                },
+                "identifierName": "ujoConfig"
+              },
+              "name": "ujoConfig"
+            }
+          ],
+          "body": {
+            "type": "BlockStatement",
+            "start": 463,
+            "end": 465,
+            "loc": {
+              "start": {
+                "line": 11,
+                "column": 58
+              },
+              "end": {
+                "line": 11,
+                "column": 60
+              }
+            },
+            "body": [],
+            "directives": [],
+            "leadingComments": null,
+            "trailingComments": null
+          },
+          "leadingComments": [
+            {
+              "type": "CommentBlock",
+              "value": "*\n * the initializeBadges method provides an API for interacting with ujo patronage badges\n * @param {Object} ujoConfig - the config object returned by ujoInit @see [link]\n * @returns {Object} - an interface for interacting with badges\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit('http://127.0.0.1:8545')\n * const ujoBadges = await initializeBadges(ujoConfig)\n ",
+              "start": 0,
+              "end": 404,
+              "loc": {
+                "start": {
+                  "line": 1,
+                  "column": 0
+                },
+                "end": {
+                  "line": 10,
+                  "column": 3
+                }
+              }
+            }
+          ],
+          "trailingComments": [
+            {
+              "type": "CommentBlock",
+              "value": "*\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n ",
+              "start": 467,
+              "end": 820,
+              "loc": {
+                "start": {
+                  "line": 13,
+                  "column": 0
+                },
+                "end": {
+                  "line": 22,
+                  "column": 3
+                }
+              }
+            }
+          ]
+        },
+        "leadingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * the initializeBadges method provides an API for interacting with ujo patronage badges\n * @param {Object} ujoConfig - the config object returned by ujoInit @see [link]\n * @returns {Object} - an interface for interacting with badges\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit('http://127.0.0.1:8545')\n * const ujoBadges = await initializeBadges(ujoConfig)\n ",
+            "start": 0,
+            "end": 404,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 10,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n ",
+            "start": 467,
+            "end": 820,
+            "loc": {
+              "start": {
+                "line": 13,
+                "column": 0
+              },
+              "end": {
+                "line": 22,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "FunctionDeclaration",
+        "start": 821,
+        "end": 851,
+        "loc": {
+          "start": {
+            "line": 23,
+            "column": 0
+          },
+          "end": {
+            "line": 23,
+            "column": 30
+          }
+        },
+        "id": {
+          "type": "Identifier",
+          "start": 830,
+          "end": 846,
+          "loc": {
+            "start": {
+              "line": 23,
+              "column": 9
+            },
+            "end": {
+              "line": 23,
+              "column": 25
+            },
+            "identifierName": "getBadgeContract"
+          },
+          "name": "getBadgeContract",
+          "leadingComments": null
+        },
+        "generator": false,
+        "expression": false,
+        "async": false,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "start": 849,
+          "end": 851,
+          "loc": {
+            "start": {
+              "line": 23,
+              "column": 28
+            },
+            "end": {
+              "line": 23,
+              "column": 30
+            }
+          },
+          "body": [],
+          "directives": [],
+          "leadingComments": null,
+          "trailingComments": null
+        },
+        "leadingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n ",
+            "start": 467,
+            "end": 820,
+            "loc": {
+              "start": {
+                "line": 13,
+                "column": 0
+              },
+              "end": {
+                "line": 22,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getAllBadges is a getter method for every single badge in the proxy contract\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgeContract()\n ",
+            "start": 852,
+            "end": 1279,
+            "loc": {
+              "start": {
+                "line": 24,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "FunctionDeclaration",
+        "start": 1280,
+        "end": 1306,
+        "loc": {
+          "start": {
+            "line": 34,
+            "column": 0
+          },
+          "end": {
+            "line": 34,
+            "column": 26
+          }
+        },
+        "id": {
+          "type": "Identifier",
+          "start": 1289,
+          "end": 1301,
+          "loc": {
+            "start": {
+              "line": 34,
+              "column": 9
+            },
+            "end": {
+              "line": 34,
+              "column": 21
+            },
+            "identifierName": "getAllBadges"
+          },
+          "name": "getAllBadges",
+          "leadingComments": null
+        },
+        "generator": false,
+        "expression": false,
+        "async": false,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "start": 1304,
+          "end": 1306,
+          "loc": {
+            "start": {
+              "line": 34,
+              "column": 24
+            },
+            "end": {
+              "line": 34,
+              "column": 26
+            }
+          },
+          "body": [],
+          "directives": [],
+          "leadingComments": null,
+          "trailingComments": null
+        },
+        "leadingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getAllBadges is a getter method for every single badge in the proxy contract\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgeContract()\n ",
+            "start": 852,
+            "end": 1279,
+            "loc": {
+              "start": {
+                "line": 24,
+                "column": 0
+              },
+              "end": {
+                "line": 33,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address\n * @param {string} ethereumAddress - the ethereum address owner of returned badges\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')\n ",
+            "start": 1308,
+            "end": 1884,
+            "loc": {
+              "start": {
+                "line": 36,
+                "column": 0
+              },
+              "end": {
+                "line": 46,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "FunctionDeclaration",
+        "start": 1885,
+        "end": 1922,
+        "loc": {
+          "start": {
+            "line": 47,
+            "column": 0
+          },
+          "end": {
+            "line": 47,
+            "column": 37
+          }
+        },
+        "id": {
+          "type": "Identifier",
+          "start": 1894,
+          "end": 1917,
+          "loc": {
+            "start": {
+              "line": 47,
+              "column": 9
+            },
+            "end": {
+              "line": 47,
+              "column": 32
+            },
+            "identifierName": "getBadgesOwnedByAddress"
+          },
+          "name": "getBadgesOwnedByAddress",
+          "leadingComments": null
+        },
+        "generator": false,
+        "expression": false,
+        "async": false,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "start": 1920,
+          "end": 1922,
+          "loc": {
+            "start": {
+              "line": 47,
+              "column": 35
+            },
+            "end": {
+              "line": 47,
+              "column": 37
+            }
+          },
+          "body": [],
+          "directives": [],
+          "leadingComments": null,
+          "trailingComments": null
+        },
+        "leadingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address\n * @param {string} ethereumAddress - the ethereum address owner of returned badges\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')\n ",
+            "start": 1308,
+            "end": 1884,
+            "loc": {
+              "start": {
+                "line": 36,
+                "column": 0
+              },
+              "end": {
+                "line": 46,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address\n * @param {string} uniqueId - the unique id that the badge represents (in our case it's an IPFS cid)\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')\n ",
+            "start": 1924,
+            "end": 2569,
+            "loc": {
+              "start": {
+                "line": 49,
+                "column": 0
+              },
+              "end": {
+                "line": 59,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "FunctionDeclaration",
+        "start": 2570,
+        "end": 2602,
+        "loc": {
+          "start": {
+            "line": 60,
+            "column": 0
+          },
+          "end": {
+            "line": 60,
+            "column": 32
+          }
+        },
+        "id": {
+          "type": "Identifier",
+          "start": 2579,
+          "end": 2597,
+          "loc": {
+            "start": {
+              "line": 60,
+              "column": 9
+            },
+            "end": {
+              "line": 60,
+              "column": 27
+            },
+            "identifierName": "getBadgesMintedFor"
+          },
+          "name": "getBadgesMintedFor",
+          "leadingComments": null
+        },
+        "generator": false,
+        "expression": false,
+        "async": false,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "start": 2600,
+          "end": 2602,
+          "loc": {
+            "start": {
+              "line": 60,
+              "column": 30
+            },
+            "end": {
+              "line": 60,
+              "column": 32
+            }
+          },
+          "body": [],
+          "directives": [],
+          "leadingComments": null,
+          "trailingComments": null
+        },
+        "leadingComments": [
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address\n * @param {string} uniqueId - the unique id that the badge represents (in our case it's an IPFS cid)\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')\n ",
+            "start": 1924,
+            "end": 2569,
+            "loc": {
+              "start": {
+                "line": 49,
+                "column": 0
+              },
+              "end": {
+                "line": 59,
+                "column": 3
+              }
+            }
+          }
+        ],
+        "trailingComments": [
+          {
+            "type": "CommentLine",
+            "value": " meant to get more information about the badges",
+            "start": 2604,
+            "end": 2653,
+            "loc": {
+              "start": {
+                "line": 62,
+                "column": 0
+              },
+              "end": {
+                "line": 62,
+                "column": 49
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " returns transaction receipt along with formatted badge data @ prop 'badge'",
+            "start": 2654,
+            "end": 2731,
+            "loc": {
+              "start": {
+                "line": 63,
+                "column": 0
+              },
+              "end": {
+                "line": 63,
+                "column": 77
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " const badge = await ujoBadges.getBadge()",
+            "start": 2732,
+            "end": 2775,
+            "loc": {
+              "start": {
+                "line": 64,
+                "column": 0
+              },
+              "end": {
+                "line": 64,
+                "column": 43
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " badge.data",
+            "start": 2776,
+            "end": 2789,
+            "loc": {
+              "start": {
+                "line": 65,
+                "column": 0
+              },
+              "end": {
+                "line": 65,
+                "column": 13
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " returns null if transaction has not been mined to chain yet",
+            "start": 2790,
+            "end": 2852,
+            "loc": {
+              "start": {
+                "line": 66,
+                "column": 0
+              },
+              "end": {
+                "line": 66,
+                "column": 62
+              }
+            }
+          },
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadge is a getter method for a single badge\n * @param {string} txHash - the transaction hash of the badge minting\n * @returns {Promise<Object, Error>} a single badge object\n * @todo decide on this object ^^\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')\n ",
+            "start": 2853,
+            "end": 3339,
+            "loc": {
+              "start": {
+                "line": 67,
+                "column": 0
+              },
+              "end": {
+                "line": 78,
+                "column": 3
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "FunctionDeclaration",
+        "start": 3340,
+        "end": 3362,
+        "loc": {
+          "start": {
+            "line": 79,
+            "column": 0
+          },
+          "end": {
+            "line": 79,
+            "column": 22
+          }
+        },
+        "id": {
+          "type": "Identifier",
+          "start": 3349,
+          "end": 3357,
+          "loc": {
+            "start": {
+              "line": 79,
+              "column": 9
+            },
+            "end": {
+              "line": 79,
+              "column": 17
+            },
+            "identifierName": "getBadge"
+          },
+          "name": "getBadge",
+          "leadingComments": null
+        },
+        "generator": false,
+        "expression": false,
+        "async": false,
+        "params": [],
+        "body": {
+          "type": "BlockStatement",
+          "start": 3360,
+          "end": 3362,
+          "loc": {
+            "start": {
+              "line": 79,
+              "column": 20
+            },
+            "end": {
+              "line": 79,
+              "column": 22
+            }
+          },
+          "body": [],
+          "directives": []
+        },
+        "leadingComments": [
+          {
+            "type": "CommentLine",
+            "value": " meant to get more information about the badges",
+            "start": 2604,
+            "end": 2653,
+            "loc": {
+              "start": {
+                "line": 62,
+                "column": 0
+              },
+              "end": {
+                "line": 62,
+                "column": 49
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " returns transaction receipt along with formatted badge data @ prop 'badge'",
+            "start": 2654,
+            "end": 2731,
+            "loc": {
+              "start": {
+                "line": 63,
+                "column": 0
+              },
+              "end": {
+                "line": 63,
+                "column": 77
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " const badge = await ujoBadges.getBadge()",
+            "start": 2732,
+            "end": 2775,
+            "loc": {
+              "start": {
+                "line": 64,
+                "column": 0
+              },
+              "end": {
+                "line": 64,
+                "column": 43
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " badge.data",
+            "start": 2776,
+            "end": 2789,
+            "loc": {
+              "start": {
+                "line": 65,
+                "column": 0
+              },
+              "end": {
+                "line": 65,
+                "column": 13
+              }
+            }
+          },
+          {
+            "type": "CommentLine",
+            "value": " returns null if transaction has not been mined to chain yet",
+            "start": 2790,
+            "end": 2852,
+            "loc": {
+              "start": {
+                "line": 66,
+                "column": 0
+              },
+              "end": {
+                "line": 66,
+                "column": 62
+              }
+            }
+          },
+          {
+            "type": "CommentBlock",
+            "value": "*\n * getBadge is a getter method for a single badge\n * @param {string} txHash - the transaction hash of the badge minting\n * @returns {Promise<Object, Error>} a single badge object\n * @todo decide on this object ^^\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')\n ",
+            "start": 2853,
+            "end": 3339,
+            "loc": {
+              "start": {
+                "line": 67,
+                "column": 0
+              },
+              "end": {
+                "line": 78,
+                "column": 3
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "directives": []
+  },
+  "comments": [
+    {
+      "type": "CommentBlock",
+      "value": "*\n * the initializeBadges method provides an API for interacting with ujo patronage badges\n * @param {Object} ujoConfig - the config object returned by ujoInit @see [link]\n * @returns {Object} - an interface for interacting with badges\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit('http://127.0.0.1:8545')\n * const ujoBadges = await initializeBadges(ujoConfig)\n ",
+      "start": 0,
+      "end": 404,
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 10,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n ",
+      "start": 467,
+      "end": 820,
+      "loc": {
+        "start": {
+          "line": 13,
+          "column": 0
+        },
+        "end": {
+          "line": 22,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getAllBadges is a getter method for every single badge in the proxy contract\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgeContract()\n ",
+      "start": 852,
+      "end": 1279,
+      "loc": {
+        "start": {
+          "line": 24,
+          "column": 0
+        },
+        "end": {
+          "line": 33,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address\n * @param {string} ethereumAddress - the ethereum address owner of returned badges\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')\n ",
+      "start": 1308,
+      "end": 1884,
+      "loc": {
+        "start": {
+          "line": 36,
+          "column": 0
+        },
+        "end": {
+          "line": 46,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address\n * @param {string} uniqueId - the unique id that the badge represents (in our case it's an IPFS cid)\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')\n ",
+      "start": 1924,
+      "end": 2569,
+      "loc": {
+        "start": {
+          "line": 49,
+          "column": 0
+        },
+        "end": {
+          "line": 59,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " meant to get more information about the badges",
+      "start": 2604,
+      "end": 2653,
+      "loc": {
+        "start": {
+          "line": 62,
+          "column": 0
+        },
+        "end": {
+          "line": 62,
+          "column": 49
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " returns transaction receipt along with formatted badge data @ prop 'badge'",
+      "start": 2654,
+      "end": 2731,
+      "loc": {
+        "start": {
+          "line": 63,
+          "column": 0
+        },
+        "end": {
+          "line": 63,
+          "column": 77
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " const badge = await ujoBadges.getBadge()",
+      "start": 2732,
+      "end": 2775,
+      "loc": {
+        "start": {
+          "line": 64,
+          "column": 0
+        },
+        "end": {
+          "line": 64,
+          "column": 43
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " badge.data",
+      "start": 2776,
+      "end": 2789,
+      "loc": {
+        "start": {
+          "line": 65,
+          "column": 0
+        },
+        "end": {
+          "line": 65,
+          "column": 13
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " returns null if transaction has not been mined to chain yet",
+      "start": 2790,
+      "end": 2852,
+      "loc": {
+        "start": {
+          "line": 66,
+          "column": 0
+        },
+        "end": {
+          "line": 66,
+          "column": 62
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadge is a getter method for a single badge\n * @param {string} txHash - the transaction hash of the badge minting\n * @returns {Promise<Object, Error>} a single badge object\n * @todo decide on this object ^^\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')\n ",
+      "start": 2853,
+      "end": 3339,
+      "loc": {
+        "start": {
+          "line": 67,
+          "column": 0
+        },
+        "end": {
+          "line": 78,
+          "column": 3
+        }
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "type": "CommentBlock",
+      "value": "*\n * the initializeBadges method provides an API for interacting with ujo patronage badges\n * @param {Object} ujoConfig - the config object returned by ujoInit @see [link]\n * @returns {Object} - an interface for interacting with badges\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit('http://127.0.0.1:8545')\n * const ujoBadges = await initializeBadges(ujoConfig)\n ",
+      "start": 0,
+      "end": 404,
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 10,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "export",
+        "keyword": "export",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null,
+        "updateContext": null
+      },
+      "value": "export",
+      "start": 405,
+      "end": 411,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 0
+        },
+        "end": {
+          "line": 11,
+          "column": 6
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "default",
+        "keyword": "default",
+        "beforeExpr": true,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null,
+        "updateContext": null
+      },
+      "value": "default",
+      "start": 412,
+      "end": 419,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 7
+        },
+        "end": {
+          "line": 11,
+          "column": 14
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "async",
+      "start": 420,
+      "end": 425,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 15
+        },
+        "end": {
+          "line": 11,
+          "column": 20
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 426,
+      "end": 434,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 21
+        },
+        "end": {
+          "line": 11,
+          "column": 29
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "initializeBadges",
+      "start": 435,
+      "end": 451,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 30
+        },
+        "end": {
+          "line": 11,
+          "column": 46
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 451,
+      "end": 452,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 46
+        },
+        "end": {
+          "line": 11,
+          "column": 47
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "ujoConfig",
+      "start": 452,
+      "end": 461,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 47
+        },
+        "end": {
+          "line": 11,
+          "column": 56
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 461,
+      "end": 462,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 56
+        },
+        "end": {
+          "line": 11,
+          "column": 57
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 463,
+      "end": 464,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 58
+        },
+        "end": {
+          "line": 11,
+          "column": 59
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 464,
+      "end": 465,
+      "loc": {
+        "start": {
+          "line": 11,
+          "column": 59
+        },
+        "end": {
+          "line": 11,
+          "column": 60
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgeContract is a getter method for the ujo badges contract\n * @returns {Object} instance of the proxy ujo badges truffle contract\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badgeContract = ujoBadges.getBadgeContract()\n ",
+      "start": 467,
+      "end": 820,
+      "loc": {
+        "start": {
+          "line": 13,
+          "column": 0
+        },
+        "end": {
+          "line": 22,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 821,
+      "end": 829,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 0
+        },
+        "end": {
+          "line": 23,
+          "column": 8
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "getBadgeContract",
+      "start": 830,
+      "end": 846,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 9
+        },
+        "end": {
+          "line": 23,
+          "column": 25
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 846,
+      "end": 847,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 25
+        },
+        "end": {
+          "line": 23,
+          "column": 26
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 847,
+      "end": 848,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 26
+        },
+        "end": {
+          "line": 23,
+          "column": 27
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 849,
+      "end": 850,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 28
+        },
+        "end": {
+          "line": 23,
+          "column": 29
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 850,
+      "end": 851,
+      "loc": {
+        "start": {
+          "line": 23,
+          "column": 29
+        },
+        "end": {
+          "line": 23,
+          "column": 30
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getAllBadges is a getter method for every single badge in the proxy contract\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgeContract()\n ",
+      "start": 852,
+      "end": 1279,
+      "loc": {
+        "start": {
+          "line": 24,
+          "column": 0
+        },
+        "end": {
+          "line": 33,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 1280,
+      "end": 1288,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 0
+        },
+        "end": {
+          "line": 34,
+          "column": 8
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "getAllBadges",
+      "start": 1289,
+      "end": 1301,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 9
+        },
+        "end": {
+          "line": 34,
+          "column": 21
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1301,
+      "end": 1302,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 21
+        },
+        "end": {
+          "line": 34,
+          "column": 22
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1302,
+      "end": 1303,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 22
+        },
+        "end": {
+          "line": 34,
+          "column": 23
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1304,
+      "end": 1305,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 24
+        },
+        "end": {
+          "line": 34,
+          "column": 25
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1305,
+      "end": 1306,
+      "loc": {
+        "start": {
+          "line": 34,
+          "column": 25
+        },
+        "end": {
+          "line": 34,
+          "column": 26
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgesOwnedByAddress is a getter method for every single badge owned by ethereum address\n * @param {string} ethereumAddress - the ethereum address owner of returned badges\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesOwnedByAddress('0xE8F08D7dc98be694CDa49430CA01595776909Eac')\n ",
+      "start": 1308,
+      "end": 1884,
+      "loc": {
+        "start": {
+          "line": 36,
+          "column": 0
+        },
+        "end": {
+          "line": 46,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 1885,
+      "end": 1893,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 0
+        },
+        "end": {
+          "line": 47,
+          "column": 8
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "getBadgesOwnedByAddress",
+      "start": 1894,
+      "end": 1917,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 9
+        },
+        "end": {
+          "line": 47,
+          "column": 32
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1917,
+      "end": 1918,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 32
+        },
+        "end": {
+          "line": 47,
+          "column": 33
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1918,
+      "end": 1919,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 33
+        },
+        "end": {
+          "line": 47,
+          "column": 34
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1920,
+      "end": 1921,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 35
+        },
+        "end": {
+          "line": 47,
+          "column": 36
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 1921,
+      "end": 1922,
+      "loc": {
+        "start": {
+          "line": 47,
+          "column": 36
+        },
+        "end": {
+          "line": 47,
+          "column": 37
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadgesMintedFor is a getter method for every single badge representing a unique id (in our case music group IPFS cid) by ethereum address\n * @param {string} uniqueId - the unique id that the badge represents (in our case it's an IPFS cid)\n * @returns {Promise<Object[], Error>} an array of badges. See {@link getBadge} for what each badge looks like in the returned array\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badges = await ujoBadges.getBadgesMintedFor('zdpuAviMaYYFTBiW54TLV11h93mB1txF6zccoF5fKpu9nsub8')\n ",
+      "start": 1924,
+      "end": 2569,
+      "loc": {
+        "start": {
+          "line": 49,
+          "column": 0
+        },
+        "end": {
+          "line": 59,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 2570,
+      "end": 2578,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 0
+        },
+        "end": {
+          "line": 60,
+          "column": 8
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "getBadgesMintedFor",
+      "start": 2579,
+      "end": 2597,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 9
+        },
+        "end": {
+          "line": 60,
+          "column": 27
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 2597,
+      "end": 2598,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 27
+        },
+        "end": {
+          "line": 60,
+          "column": 28
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 2598,
+      "end": 2599,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 28
+        },
+        "end": {
+          "line": 60,
+          "column": 29
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 2600,
+      "end": 2601,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 30
+        },
+        "end": {
+          "line": 60,
+          "column": 31
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 2601,
+      "end": 2602,
+      "loc": {
+        "start": {
+          "line": 60,
+          "column": 31
+        },
+        "end": {
+          "line": 60,
+          "column": 32
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " meant to get more information about the badges",
+      "start": 2604,
+      "end": 2653,
+      "loc": {
+        "start": {
+          "line": 62,
+          "column": 0
+        },
+        "end": {
+          "line": 62,
+          "column": 49
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " returns transaction receipt along with formatted badge data @ prop 'badge'",
+      "start": 2654,
+      "end": 2731,
+      "loc": {
+        "start": {
+          "line": 63,
+          "column": 0
+        },
+        "end": {
+          "line": 63,
+          "column": 77
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " const badge = await ujoBadges.getBadge()",
+      "start": 2732,
+      "end": 2775,
+      "loc": {
+        "start": {
+          "line": 64,
+          "column": 0
+        },
+        "end": {
+          "line": 64,
+          "column": 43
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " badge.data",
+      "start": 2776,
+      "end": 2789,
+      "loc": {
+        "start": {
+          "line": 65,
+          "column": 0
+        },
+        "end": {
+          "line": 65,
+          "column": 13
+        }
+      }
+    },
+    {
+      "type": "CommentLine",
+      "value": " returns null if transaction has not been mined to chain yet",
+      "start": 2790,
+      "end": 2852,
+      "loc": {
+        "start": {
+          "line": 66,
+          "column": 0
+        },
+        "end": {
+          "line": 66,
+          "column": 62
+        }
+      }
+    },
+    {
+      "type": "CommentBlock",
+      "value": "*\n * getBadge is a getter method for a single badge\n * @param {string} txHash - the transaction hash of the badge minting\n * @returns {Promise<Object, Error>} a single badge object\n * @todo decide on this object ^^\n *\n * @example\n * import ujoInit from 'ujo.js/config'\n * const ujoConfig = ujoInit(<Web3Provider>)\n * const ujoBadges = await initializeBadges(ujoConfig)\n * const badge = await ujoBadges.getBadge('0xb8eedb9637e423b73df56f456d7a68161af281d0dce3ec4b2f3f977f28226b5e')\n ",
+      "start": 2853,
+      "end": 3339,
+      "loc": {
+        "start": {
+          "line": 67,
+          "column": 0
+        },
+        "end": {
+          "line": 78,
+          "column": 3
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "function",
+        "keyword": "function",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "function",
+      "start": 3340,
+      "end": 3348,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 0
+        },
+        "end": {
+          "line": 79,
+          "column": 8
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "name",
+        "beforeExpr": false,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "value": "getBadge",
+      "start": 3349,
+      "end": 3357,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 9
+        },
+        "end": {
+          "line": 79,
+          "column": 17
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "(",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 3357,
+      "end": 3358,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 17
+        },
+        "end": {
+          "line": 79,
+          "column": 18
+        }
+      }
+    },
+    {
+      "type": {
+        "label": ")",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 3358,
+      "end": 3359,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 18
+        },
+        "end": {
+          "line": 79,
+          "column": 19
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "{",
+        "beforeExpr": true,
+        "startsExpr": true,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 3360,
+      "end": 3361,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 20
+        },
+        "end": {
+          "line": 79,
+          "column": 21
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "}",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null
+      },
+      "start": 3361,
+      "end": 3362,
+      "loc": {
+        "start": {
+          "line": 79,
+          "column": 21
+        },
+        "end": {
+          "line": 79,
+          "column": 22
+        }
+      }
+    },
+    {
+      "type": {
+        "label": "eof",
+        "beforeExpr": false,
+        "startsExpr": false,
+        "rightAssociative": false,
+        "isLoop": false,
+        "isAssign": false,
+        "prefix": false,
+        "postfix": false,
+        "binop": null,
+        "updateContext": null
+      },
+      "start": 3363,
+      "end": 3363,
+      "loc": {
+        "start": {
+          "line": 80,
+          "column": 0
+        },
+        "end": {
+          "line": 80,
+          "column": 0
+        }
+      }
+    }
+  ]
+}
