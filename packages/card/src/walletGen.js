@@ -1,17 +1,17 @@
-import { store } from "./App";
+import { store } from './App';
 // import * as ethers from "ethers";
-const bip39 = require('bip39')
-const hdkey = require('ethereumjs-wallet/hdkey')
+const bip39 = require('bip39');
+const hdkey = require('ethereumjs-wallet/hdkey');
 
 export async function createWallet(web3) {
-  console.log("Creating new random wallet");
-  const mnemonic = bip39.generateMnemonic()
-  const wallet = await hdkey.fromMasterSeed(mnemonic).getWallet()
+  console.log('Creating new random wallet');
+  const mnemonic = bip39.generateMnemonic();
+  const wallet = await hdkey.fromMasterSeed(mnemonic).getWallet();
   // const wallet = await web3.eth.accounts.create()
-  localStorage.setItem("delegateSigner", wallet.getAddressString())
-  localStorage.setItem("mnemonic", mnemonic);
-  localStorage.setItem("privateKey", wallet.getPrivateKeyString());
-  return wallet
+  localStorage.setItem('delegateSigner', wallet.getAddressString());
+  localStorage.setItem('mnemonic', mnemonic);
+  localStorage.setItem('privateKey', wallet.getPrivateKeyString());
+  return wallet;
 }
 
 // export async function findOrCreateWallet(web3) {
@@ -33,16 +33,16 @@ export async function createWallet(web3) {
 
 export async function createWalletFromMnemonic(mnemonic) {
   let wallet;
-  try{
-    wallet = await hdkey.fromMasterSeed(mnemonic).getWallet()
-    console.log(`Found wallet from mnemonic`)
-    localStorage.setItem("delegateSigner", wallet.getAddressString())
-    localStorage.setItem("mnemonic", mnemonic);
-    localStorage.setItem("privateKey", wallet.getPrivateKeyString());
+  try {
+    wallet = await hdkey.fromMasterSeed(mnemonic).getWallet();
+    console.log(`Found wallet from mnemonic`);
+    localStorage.setItem('delegateSigner', wallet.getAddressString());
+    localStorage.setItem('mnemonic', mnemonic);
+    localStorage.setItem('privateKey', wallet.getPrivateKeyString());
     return wallet;
-  }catch(e){
-    console.log(`error in WalletGen`)
-    console.log(e)
+  } catch (e) {
+    console.log(`error in WalletGen`);
+    console.log(e);
   }
 }
 
@@ -50,6 +50,6 @@ export function getStore() {
   if (store) {
     return store;
   } else {
-    console.log("no store found");
+    console.log('no store found');
   }
 }
