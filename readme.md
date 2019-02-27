@@ -41,7 +41,7 @@ This project requires `node >=10.12.0` and `yarn >=1.10.1`. A unix shell is also
 To get started, clone the repo and install its dependencies:
 
 ```bash
-git clone https://github.com/ujo/ujo.js.git
+git clone https://github.com/ujoteam/ujo.js.git
 cd ujo.js
 ```
 
@@ -77,7 +77,7 @@ TODO - add .env file
 
 ## Testing
 
-To test all packages, ensure the contracts have been migrate and then run: 
+To test all packages, ensure the contracts have been migrate and then run:
 
 ```
 yarn test
@@ -93,7 +93,7 @@ Remove all node modules (if you already have them installed):
 lerna clean
 ```
 
-Clean all smart-contract build files: 
+Clean all smart-contract build files:
 
 ```
 npm run clean-contracts
@@ -101,20 +101,19 @@ npm run clean-contracts
 
 For next steps, take a look at documentation for the individual package(s) you want to run and/or develop.
 
-
 ## Packages
 
 ### Published
 
-| Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                                                         | Description                                                                                                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [`@ujoteam/<todo>`]()                                                                                                                                                             | [![npm](https://img.shields.io/npm/v/@ujo/todo.svg?style=flat-square)](https://www.npmjs.com/package/@ujo/licensing)           |   Explanation of licensing module   ||
+| Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Version&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;                                      | Description                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| [`@ujoteam/<todo>`]()                                                                                                                                                                                                                                | [![npm](https://img.shields.io/npm/v/@ujo/todo.svg?style=flat-square)](https://www.npmjs.com/package/@ujo/licensing) | Explanation of licensing module |  |
 
 ### Private
 
-| Name                                                                                                 | Description                                                                                                                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@ujo/<todo>`]()             | Description of private repos with.                                                               ||
+| Name              | Description                        |
+| ----------------- | ---------------------------------- |
+| [`@ujo/<todo>`]() | Description of private repos with. |  |
 
 ## Resources
 
@@ -122,11 +121,10 @@ For next steps, take a look at documentation for the individual package(s) you w
 - ✍ [The Ujo Blog](https://blog.ujomusic.com)
 - 📖 [The Ujo Docs](https://docs.ujomusic.com/)
 - 💬 [The Ujo Chat](https://discord.gg/gWWXT7H)
-<!-- - ❓ [The Ujo Forum]() -->
+  <!-- - ❓ [The Ujo Forum]() -->
 
 ## Contributing
 
 Thanks for your interest in contributing to ujoJS. Please have a look at the [guide](https://github.com/ujoteam/ujo.js/blob/master/CONTRIBUTING.md) to get started.
 
 Please check out the [issues page](https://github.com/ujo/ujo.js/issues) for areas that could use help! We hope to see your username on our [list of contributors](https://github.com/ujo/ujo.js/graphs/contributors) 🙏🎉🚀
-
