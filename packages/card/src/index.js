@@ -133,6 +133,9 @@ class Card {
     }
   }
 
+  // ************************************************* //
+  //                State setters                      //
+  // ************************************************* //
   async networkHandler(rpc) {
     // called from settingsCard when a new RPC URL is connected
     // will create a new custom web3 and reinstantiate connext
@@ -175,6 +178,7 @@ class Card {
     const provider = clientProvider(providerOpts);
     const customWeb3 = new Web3(provider);
     const customId = await customWeb3.eth.net.getId();
+
     // NOTE: token/contract/hubWallet ddresses are set to state while initializing connext
     this.setState({ customWeb3, hubUrl });
     if (windowId && windowId !== customId) {
@@ -224,6 +228,9 @@ class Card {
     });
   }
 
+  // ************************************************* //
+  //                    Pollers                        //
+  // ************************************************* //
   async pollConnextState() {
     const { connext } = this.state.connext;
     // register listeners
