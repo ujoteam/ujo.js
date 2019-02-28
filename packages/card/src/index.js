@@ -1,28 +1,32 @@
+import 'babel-polyfill';
+require("dotenv").config();
 import { getConnextClient } from 'connext/dist/Connext.js';
 import axios from 'axios';
 
-import ProviderOptions from '../utils/ProviderOptions.ts';
-import clientProvider from '../utils/web3/clientProvider.ts';
-import { createWalletFromMnemonic, createWallet } from './walletGen';
+import ProviderOptions from '../utils/ProviderOptions.js';
+import clientProvider from '../utils/web3/clientProvider.js';
+import createWallet from './walletGen';
 
 const Web3 = require('web3');
 const eth = require('ethers');
 const humanTokenAbi = require('../abi/humanToken.json');
 
-const env = process.env.NODE_ENV;
+// const env = process.env.NODE_ENV;
 const tokenAbi = humanTokenAbi;
-console.log(`starting app in env: ${JSON.stringify(process.env, null, 1)}`);
+// console.log(`starting app in env: ${JSON.stringify(process.env, null, 1)}`);
 
 // Provider info
 // local
-const hubUrlLocal = process.env.REACT_APP_LOCAL_HUB_URL.toLowerCase();
-const localProvider = process.env.REACT_APP_LOCAL_RPC_URL.toLowerCase();
-// rinkeby
-const hubUrlRinkeby = process.env.REACT_APP_RINKEBY_HUB_URL.toLowerCase();
-const rinkebyProvider = process.env.REACT_APP_RINKEBY_RPC_URL.toLowerCase();
-// mainnet
-const hubUrlMainnet = process.env.REACT_APP_MAINNET_HUB_URL.toLowerCase();
-const mainnetProvider = process.env.REACT_APP_MAINNET_RPC_URL.toLowerCase();
+const hubUrlLocal = 'http://localhost:8080';
+const localProvider = 'http://localhost:8545';
+// REACT_APP_LOCAL_HUB_URL=http://localhost:8080
+// REACT_APP_LOCAL_RPC_URL=http://localhost:8545
+// // rinkeby
+// const hubUrlRinkeby = process.env.REACT_APP_RINKEBY_HUB_URL.toLowerCase();
+// const rinkebyProvider = process.env.REACT_APP_RINKEBY_RPC_URL.toLowerCase();
+// // mainnet
+// const hubUrlMainnet = process.env.REACT_APP_MAINNET_HUB_URL.toLowerCase();
+// const mainnetProvider = process.env.REACT_APP_MAINNET_RPC_URL.toLowerCase();
 
 const HASH_PREAMBLE = 'SpankWallet authentication message:';
 const DEPOSIT_MINIMUM_WEI = eth.utils.parseEther('0.03'); // 30 FIN
@@ -82,8 +86,8 @@ class Card {
   }
 
   async init(config) {
-    this.web3 = config.web3;
-    this.networkId = await config.getNetwork();
+    // this.web3 = config.web3;
+    // this.networkId = await config.getNetwork();
 
     /* 
     Start Connext logic
@@ -95,13 +99,15 @@ class Card {
     // TODO: better way to set default provider
     // if it doesnt exist in storage
     if (!rpc) {
-      rpc = env === 'development' ? 'LOCALHOST' : 'RINKEBY';
+      rpc = 'LOCALHOST';
+      // rpc = env === 'development' ? 'LOCALHOST' : 'RINKEBY';
       localStorage.setItem('rpc', rpc);
     }
     // If a browser address exists, create wallet
     if (mnemonic) {
-      const delegateSigner = await createWalletFromMnemonic(mnemonic);
+      const delegateSigner = await createWallet(mnemonic);
       const address = await delegateSigner.getAddressString();
+      this.state.address = address;
       console.log('Autosigner address: ', address);
 
       // TODO
@@ -114,12 +120,11 @@ class Card {
       // // If a browser address exists, instantiate connext
       // console.log('this.state.delegateSigner', this.state.delegateSigner)
       // if (this.state.delegateSigner) {
-      await this.setWeb3(rpc);
+      await this.setWeb3(delegateSigner, rpc);
       await this.setConnext();
       await this.setTokenContract();
       await this.authorizeHandler();
 
-      console.log(this.state.connext);
       await this.pollConnextState();
       await this.poller();
     } else {
@@ -146,7 +151,7 @@ class Card {
   }
 
   // either LOCALHOST MAINNET or RINKEBY
-  async setWeb3(rpc) {
+  async setWeb3(address, rpc) {
     let rpcUrl;
     let hubUrl;
     switch (rpc) {
@@ -154,14 +159,14 @@ class Card {
         rpcUrl = localProvider;
         hubUrl = hubUrlLocal;
         break;
-      case 'RINKEBY':
-        rpcUrl = rinkebyProvider;
-        hubUrl = hubUrlRinkeby;
-        break;
-      case 'MAINNET':
-        rpcUrl = mainnetProvider;
-        hubUrl = hubUrlMainnet;
-        break;
+      // case 'RINKEBY':
+      //   rpcUrl = rinkebyProvider;
+      //   hubUrl = hubUrlRinkeby;
+      //   break;
+      // case 'MAINNET':
+      //   rpcUrl = mainnetProvider;
+      //   hubUrl = hubUrlMainnet;
+      //   break;
       default:
         throw new Error(`Unrecognized rpc: ${rpc}`);
     }
@@ -174,19 +179,25 @@ class Card {
       windowId = await window.web3.eth.net.getId();
     }
 
-    const providerOpts = new ProviderOptions(store, rpcUrl).approving();
+    const providerOpts = new ProviderOptions(address, rpcUrl).approving();
     const provider = clientProvider(providerOpts);
     const customWeb3 = new Web3(provider);
-    const customId = await customWeb3.eth.net.getId();
+    this.state.customWeb3 = customWeb3;
+    console.log('customWeb3');
+    // console.log('-------- Crashes below --------')
+    // const customId = await customWeb3.eth.net.getId();
+    console.log('customId');
 
     // NOTE: token/contract/hubWallet ddresses are set to state while initializing connext
-    this.setState({ customWeb3, hubUrl });
-    if (windowId && windowId !== customId) {
-      alert(
-        `Your card is set to ${JSON.stringify(
-          rpc,
-        )}. To avoid losing funds, please make sure your metamask and card are using the same network.`,
-      );
+    // this.setState({ customWeb3, hubUrl });
+    if (windowId && true) {
+    // if (windowId && windowId !== customId) {
+      console.log(`REMOVED ALERT --- Your card is set to ${JSON.stringify(rpc)}`);
+      // alert(
+      //   `Your card is set to ${JSON.stringify(
+      //     rpc,
+      //   )}. To avoid losing funds, please make sure your metamask and card are using the same network.`,
+      // );
     }
   }
 
@@ -194,7 +205,7 @@ class Card {
     try {
       const { customWeb3, tokenAddress } = this.state;
       const tokenContract = new customWeb3.eth.Contract(tokenAbi, tokenAddress);
-      this.setState({ tokenContract });
+      // this.setState({ tokenContract });
       console.log('Set up token contract details');
     } catch (e) {
       console.log('Error setting token contract');
@@ -203,7 +214,8 @@ class Card {
   }
 
   async setConnext() {
-    const { address, customWeb3, hubUrl } = this.state;
+    const hubUrl = 'http://localhost:8080';
+    const { address, customWeb3 } = this.state;
 
     const opts = {
       web3: customWeb3,
@@ -219,13 +231,13 @@ class Card {
     console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
     console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
     console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
-    this.setState({
-      connext,
-      tokenAddress: connext.opts.tokenAddress,
-      channelManagerAddress: connext.opts.contractAddress,
-      hubWalletAddress: connext.opts.hubAddress,
-      ethNetworkId: connext.opts.ethNetworkId,
-    });
+    // this.setState({
+    //   connext,
+    //   tokenAddress: connext.opts.tokenAddress,
+    //   channelManagerAddress: connext.opts.contractAddress,
+    //   hubWalletAddress: connext.opts.hubAddress,
+    //   ethNetworkId: connext.opts.ethNetworkId,
+    // });
   }
 
   // ************************************************* //
@@ -236,12 +248,12 @@ class Card {
     // register listeners
     connext.on('onStateChange', state => {
       console.log('Connext state changed:', state);
-      this.setState({
-        channelState: state.persistent.channel,
-        connextState: state,
-        runtime: state.runtime,
-        exchangeRate: state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0,
-      });
+      // this.setState({
+      //   channelState: state.persistent.channel,
+      //   connextState: state,
+      //   runtime: state.runtime,
+      //   exchangeRate: state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0,
+      // });
     });
     // start polling
     await connext.start();
@@ -343,7 +355,7 @@ class Card {
           withdraw = null;
           payment = null;
       }
-      await this.setState({ status: { deposit, withdraw, payment } });
+      // await this.setState({ status: { deposit, withdraw, payment } });
     }
   }
 
@@ -351,15 +363,19 @@ class Card {
   //                    Handlers                       //
   // ************************************************* //
   async authorizeHandler() {
-    const { hubUrl } = this.state.hubUrl;
+    const hubUrl = 'http://localhost:8080';
     const web3 = this.state.customWeb3;
     const challengeRes = await axios.post(`${hubUrl}/auth/challenge`, {}, opts);
 
+    
     const hash = web3.utils.sha3(
       `${HASH_PREAMBLE} ${web3.utils.sha3(challengeRes.data.nonce)} ${web3.utils.sha3('localhost')}`,
     );
+    
+    console.log('sign problem?')
 
     const signature = await web3.eth.personal.sign(hash, this.state.address);
+    console.log('GOIT HEREHRHE??')
 
     try {
       const authRes = await axios.post(
@@ -377,10 +393,10 @@ class Card {
       console.log(`hub authentication cookie set: ${token}`);
       const res = await axios.get(`${hubUrl}/auth/status`, opts);
       if (res.data.success) {
-        this.setState({ authorized: true });
+        // this.setState({ authorized: true });
         return res.data.success;
       } else {
-        this.setState({ authorized: false });
+        // this.setState({ authorized: false });
       }
       console.log(`Auth status: ${JSON.stringify(res.data)}`);
     } catch (e) {
@@ -389,12 +405,12 @@ class Card {
   }
 
   async scanURL(amount, recipient) {
-    this.setState({
-      sendScanArgs: {
-        amount,
-        recipient,
-      },
-    });
+    // this.setState({
+    //   sendScanArgs: {
+    //     amount,
+    //     recipient,
+    //   },
+    // });
   }
 
   async collateralHandler() {
@@ -407,7 +423,7 @@ class Card {
     const deposit = null;
     const payment = null;
     const withdraw = null;
-    this.setState({ status: { deposit, payment, withdraw } });
+    // this.setState({ status: { deposit, payment, withdraw } });
   }
 }
 
