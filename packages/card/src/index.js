@@ -1,10 +1,9 @@
 import 'babel-polyfill';
-require("dotenv").config();
-import { getConnextClient } from 'connext/dist/Connext.js';
+import { getConnextClient } from 'connext/dist/Connext';
 import axios from 'axios';
 
-import ProviderOptions from '../utils/ProviderOptions.js';
-import clientProvider from '../utils/web3/clientProvider.js';
+import ProviderOptions from '../utils/ProviderOptions';
+import clientProvider from '../utils/web3/clientProvider';
 import createWallet from './walletGen';
 
 const Web3 = require('web3');
@@ -42,7 +41,6 @@ const opts = {
 
 class Card {
   constructor(config) {
-    console.log(config);
     this.state = {
       rpcUrl: null,
       hubUrl: null,
@@ -262,6 +260,8 @@ class Card {
   }
 
   async poller() {
+    console.log('GOT TO HERHEH');
+
     await this.autoDeposit();
     await this.autoSwap();
 
