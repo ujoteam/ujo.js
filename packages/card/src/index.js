@@ -121,7 +121,7 @@ class Card {
       await this.setWeb3(delegateSigner, rpc);
       await this.setConnext();
       await this.setTokenContract();
-      // await this.authorizeHandler();
+      await this.authorizeHandler();
 
       await this.pollConnextState();
       await this.poller();
@@ -376,7 +376,7 @@ class Card {
     
     console.log('sign problem?')
 
-    const signature = await web3.eth.personal.sign(hash, this.state.address);
+    const signature = await web3.eth.personal.sign(hash, this.state.address, null);
     console.log('GOIT HEREHRHE??')
 
     try {

@@ -23,9 +23,10 @@ export default class ProviderOptions {
     this.wallet = wallet;
     this.rpcUrl = rpcUrl || DEFAULT_RPC_URL;
   }
-
+  
   getAccounts(callback) {
-    callback(null, this.address ? [this.address] : [])
+    const address = this.wallet.getAddressString()
+    callback(null, address ? [address] : [])
   }
 
   approveTransactionAlways(txParams, callback) {
@@ -46,40 +47,36 @@ export default class ProviderOptions {
   }
 
   signMessageAlways(messageParams, callback) {
-    const key = this.wallet.getPrivateKey()
+    const key = this.wallet.getPrivateKey();
 
     if (!key) {
-      return callback('Wallet is locked.')
+      return callback('Wallet is locked.');
     }
 
-    const msg = messageParams.data
+    const msg = messageParams.data;
 
-    const hashBuf = new Buffer(msg.split('x')[1], 'hex')
-    const prefix = new Buffer('\x19Ethereum Signed Message:\n')
-    const buf = Buffer.concat([
-      prefix,
-      new Buffer(String(hashBuf.length)),
-      hashBuf
-    ])
+    const hashBuf = Buffer.from(msg.split('x')[1], 'hex');
+    const prefix = Buffer.from('\x19Ethereum Signed Message:\n');
+    const buf = Buffer.concat([prefix, Buffer.from(String(hashBuf.length)), hashBuf]);
 
-    const data = ethUtil.sha3(buf)
-    const msgSig = ethUtil.ecsign(data, key)
-    const rawMsgSig = ethUtil.bufferToHex(sigUtil.concatSig(msgSig.v, msgSig.r, msgSig.s))
-    callback(null, rawMsgSig)
+    const data = ethUtil.sha3(buf);
+    const msgSig = ethUtil.ecsign(data, key);
+    const rawMsgSig = ethUtil.bufferToHex(sigUtil.concatSig(msgSig.v, msgSig.r, msgSig.s));
+    callback(null, rawMsgSig);
   }
 
   approving() {
     return {
       static: {
         eth_syncing: false,
-        web3_clientVersion: `LiteratePayments/v${1.0}`
+        web3_clientVersion: `LiteratePayments/v${1.0}`,
       },
       rpcUrl: this.rpcUrl,
-      getAccounts: this.getAccounts,
-      approveTransaction: this.approveTransactionAlways,
-      signTransaction: this.signTransaction,
-      signMessage: this.signMessageAlways,
-      signPersonalMessage: this.signMessageAlways,
+      getAccounts: this.getAccounts.bind(this),
+      approveTransaction: this.approveTransactionAlways.bind(this),
+      signTransaction: this.signTransaction.bind(this),
+      signMessage: this.signMessageAlways.bind(this),
+      signPersonalMessage: this.signMessageAlways.bind(this),
     }
   }
 
