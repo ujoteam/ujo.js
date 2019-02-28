@@ -123,7 +123,7 @@ class Card {
       await this.setWeb3(delegateSigner, rpc);
       await this.setConnext();
       await this.setTokenContract();
-      await this.authorizeHandler();
+      // await this.authorizeHandler();
 
       await this.pollConnextState();
       await this.poller();
@@ -217,20 +217,21 @@ class Card {
     const hubUrl = 'http://localhost:8080';
     const { address, customWeb3 } = this.state;
 
-    const opts = {
+    const options = {
       web3: customWeb3,
       hubUrl, // in dev-mode: http://localhost:8080,
       user: address,
     };
-    console.log('Setting up connext with opts:', opts);
+    console.log('Setting up connext with options:', options);
 
     // *** Instantiate the connext client ***
-    const connext = await getConnextClient(opts);
+    const connext = await getConnextClient(options);
     console.log(`Successfully set up connext! Connext config:`);
     console.log(`  - tokenAddress: ${connext.opts.tokenAddress}`);
     console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
     console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
     console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
+    this.state.connext = connext;
     // this.setState({
     //   connext,
     //   tokenAddress: connext.opts.tokenAddress,
@@ -244,7 +245,8 @@ class Card {
   //                    Pollers                        //
   // ************************************************* //
   async pollConnextState() {
-    const { connext } = this.state.connext;
+    const { connext } = this.state;
+    console.log('connext', connext);
     // register listeners
     connext.on('onStateChange', state => {
       console.log('Connext state changed:', state);
