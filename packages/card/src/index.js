@@ -4,6 +4,8 @@ import axios from 'axios';
 
 import ProviderOptions from '../utils/ProviderOptions';
 import clientProvider from '../utils/web3/clientProvider';
+import { getDollarSubstring } from "../utils/getDollarSubstring";
+
 import createWallet from './walletGen';
 
 const Web3 = require('web3');
@@ -40,8 +42,9 @@ const opts = {
 };
 
 class Card {
-  constructor(config) {
+  constructor(h1Ele) {
     this.state = {
+      h1Ele,
       rpcUrl: null,
       hubUrl: null,
       tokenAddress: null,
@@ -83,7 +86,7 @@ class Card {
     this.networkHandler = this.networkHandler.bind(this);
   }
 
-  async init(config) {
+  async init() {
     // this.web3 = config.web3;
     // this.networkId = await config.getNetwork();
 
@@ -244,10 +247,22 @@ class Card {
   // ************************************************* //
   async pollConnextState() {
     const { connext } = this.state;
+    const that = this;
     console.log('connext', connext);
     // register listeners
     connext.on('onStateChange', state => {
+      if (state.persistent.channel) {
+        console.log('update amount');
+        const balance = state.persistent.channel.balanceTokenUser;
+        const substr = balance ? getDollarSubstring(balance) : ["0","00"]
+
+        that.state.h1Ele.innerHTML = `$${substr[0]}.${substr[1].substring(0, 2)}`;
+      }
       console.log('Connext state changed:', state);
+      that.state.channelState = state.persistent.channel;
+      that.state.connextState = state;
+      that.state.runtime = state.runtime;
+      that.state.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
       // this.setState({
       //   channelState: state.persistent.channel,
       //   connextState: state,

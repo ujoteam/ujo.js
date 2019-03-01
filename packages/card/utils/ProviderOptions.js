@@ -26,6 +26,7 @@ export default class ProviderOptions {
   
   getAccounts(callback) {
     const address = this.wallet.getAddressString()
+    console.log('address', address);
     callback(null, address ? [address] : [])
   }
 
