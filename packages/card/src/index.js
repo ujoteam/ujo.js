@@ -52,25 +52,18 @@ class Card {
       // TODO: remove! currently are display elements
       h1Ele,
 
-      // keepers...
+      // not sure what we need this for
       exchangeRate: '0.00',
+      delegateSigner: null,
 
+      // TODO: consider pulling in from init fn
       rpcUrl: null,
       hubUrl: null,
-      channelManagerAddress: null,
-      hubWalletAddress: null,
-      customWeb3: null,
-      connext: null,
-      delegateSigner: null,
-      authorized: 'false',
-      approvalWeiUser: '10000',
-      channelState: null,
-      interval: null,
-      runtime: null,
     };
   }
 
   // check to see if a mnemonic exists and create wallet
+  // TODO: consider passing rpcUrl and hubUrl into init
   async init() {
     // Set up wallet
     const mnemonic = localStorage.getItem('mnemonic');
@@ -120,7 +113,6 @@ class Card {
     const provider = clientProvider(providerOpts);
     const customWeb3 = new Web3(provider);
     this.web3 = customWeb3;
-    // this.state.customWeb3 = customWeb3;
   }
 
   async setConnext() {
@@ -142,13 +134,6 @@ class Card {
     console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
     this.connext = connext;
     this.tokenAddress = connext.opts.tokenAddress;
-    // this.setState({
-    //   connext,
-    //   tokenAddress: connext.opts.tokenAddress,
-    //   channelManagerAddress: connext.opts.contractAddress,
-    //   hubWalletAddress: connext.opts.hubAddress,
-    //   ethNetworkId: connext.opts.ethNetworkId,
-    // });
   }
 
   async setTokenContract() {
@@ -180,14 +165,8 @@ class Card {
       console.log('Connext state changed:', state);
       that.channelState = state.persistent.channel;
       that.connextState = state;
-      that.state.runtime = state.runtime;
-      that.state.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
-      // this.setState({
-      //   channelState: state.persistent.channel,
-      //   connextState: state,
-      //   runtime: state.runtime,
-      //   exchangeRate: state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0,
-      // });
+      // that.state.runtime = state.runtime;
+      // that.state.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
     });
     // start polling
     await this.connext.start();
@@ -326,7 +305,7 @@ class Card {
 
     // refactored to avoid race conditions around
     // setting state
-    return await this._paymentHandler(payment);
+    return this.paymentHandler(payment);
   }
 
   async generatePayment(value, recipientAddress) {
@@ -349,10 +328,10 @@ class Card {
 
     // refactored to avoid race conditions around
     // setting state
-    await this._paymentHandler(payment);
+    await this.paymentHandler(payment);
   }
 
-  async _paymentHandler(payment) {
+  async paymentHandler(payment) {
     const { connext, web3, channelState } = this;
     // const { connext, web3, channelState } = this.props;
 
@@ -396,32 +375,65 @@ class Card {
 
     // return if either errors exist
     if (balanceError || addressError) {
-      console.log('GOT HERE?')
-      this.setState({ balanceError, addressError });
       // TODO: throw an error
-      return;
+      return false;
     }
 
     // otherwise make payment
-    console.log('MAKE PAYMENT????')
-
     try {
       let paymentRes = await connext.buy(payment);
-      console.log('AFTER PAYMENT????')
       console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
-      if (payment.type === 'PT_LINK') {
-        // const { secret } = paymentRes;
-        return paymentRes.secret;
-        this.props.history.push({
-          pathname: "/redeem",
-          search: `?secret=${secret}`,
-          state: { isConfirm: true, secret }
-        });
+      if (payment.payments[0].type === 'PT_LINK') {
+        return payment.payments[0].secret;
       }
-      // this.setState({ showReceipt: true });
+      return true;
     } catch (e) {
+      // TODO: throw error here
       // console.log("SEND ERROR, SETTING");
       // this.setState({ sendError: true, showReceipt: true });
+    }
+  }
+
+  async redeemPayment(secret) {
+    // const { isConfirm, purchaseId, retryCount } = this.state;
+    const { connext, channelState, connextState } = this;
+    if (!connext || !channelState || !connextState) {
+      console.log("Connext or channel object not detected");
+      return;
+    }
+
+    if (!secret) {
+      console.log("No secret detected, cannot redeem payment.");
+      return;
+    }
+
+    // if (isConfirm) {
+    //   console.log("User is creator of linked payment, not automatically redeeming.");
+    //   return;
+    // }
+
+    // user is not payor, can redeem payment
+    try {
+      const updated = await connext.redeem(secret);
+      console.log('redeemed successs?', updated);
+      // if (!purchaseId && retryCount < 5) {
+      //   console.log('Redeeming linked payment with secret', secret)
+      //   if (updated.purchaseId == null) {
+      //     this.setState({ retryCount: retryCount + 1})
+      //   }
+      //   this.setState({ purchaseId: updated.purchaseId, amount: updated.amount, showReceipt: true });
+      // }
+      // if (retryCount >= 5) {
+      //   this.setState({ purchaseId: "failed", sendError: true, showReceipt: true });
+      // }
+    } catch (e) {
+      // TODO: throw error
+      // if (e.message.indexOf("Payment has been redeemed") !== -1) {
+      //   this.setState({ retryCount: 5, previouslyRedeemed: true })
+      //   return
+      // }
+      // this.setState({ retryCount: retryCount + 1 });
+      // console.log('retryCount', retryCount + 1)
     }
   }
 
