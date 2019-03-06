@@ -1,17 +1,14 @@
-## Handlers
+# Licensing
 
-[![codecov](https://codecov.io/gh/UjoTeam/contracts-handlers/branch/master/graph/badge.svg)](https://codecov.io/gh/UjoTeam/contracts-handlers)  
-[![CircleCI](https://circleci.com/gh/UjoTeam/contracts-handlers.svg?style=svg)](https://circleci.com/gh/UjoTeam/contracts-handlers)  
+The Licensing Handlers are smart-contracts responsible for handling licensing payments. Payments are input and the funds are disbursed to the appropriate beneficiaries towards a specific license referenced by it’s Content-ID. Similar to the Artist Registry these events are stored in the blockchain via event logs. During a payment, the handlers fetch the USD/ETH price from an Oracle (described in the next section), and notifies a variable amount of addresses of the action. An example of a notified beneficiary is issuing a collectible badge upon payment. The handlers enable proof-of-payments, granting the rights specified in the license to the licensor. An example event looks like this:
 
+```solidity
+LogPayment(
+    _cid, _oracle, ethUSD, msg.value, msg.sender, _buyer, _beneficiaries, _amounts
+);
+```
 
-These contracts are responsible for handling licensing payments.
-
-It takes in a payment and disbursed the funds according to the specified inputs towards a specific license [specified by a CID].
-
-This is stored through event logs.
-
-Within a payment, it fetches the USD/ETH price from an oracle & it allows any beneficiaries to be notified. It does not yet conform to ERC165 for interface inspection.
-
-A notified beneficiary example is issuing a badge upon payment.
-
-The end result is a proof-of-payment which is used by an external provider to forward/produce whatever rights are specified in the license. In the future, the aim is to make this more decentralized: allowing any provider to submit proof of delivery.
+| Network         | Address                                                                                                                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Mainnet (id: 1) | [0x0be87716eda791a5c1f9b73e08b47cee2b43e59f](https://etherscan.io/address/0x0be87716eda791a5c1f9b73e08b47cee2b43e59f)         |
+| Rinkeby (id: 4) | [0x4cd36d101197b299fdd79254372541941e950066](https://rinkeby.etherscan.io/address/0x4cd36d101197b299fdd79254372541941e950066) |
