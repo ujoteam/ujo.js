@@ -1,6 +1,6 @@
 import Card from '../../card/src/index';
 
-function main() {
+const main = async () => {
   const h1 = document.createElement('h1');
   h1.innerHTML = '$0.00';
   document.body.appendChild(h1);
@@ -10,11 +10,12 @@ function main() {
   h5.innerHTML = '????????????????';
   document.body.appendChild(h5);
 
-  const card = new Card(h1);
-  console.log('card', card);
-  card.init();
-
-  setTimeout(() => { h5.innerHTML = card.address; }, 300);
+  const card = new Card(amount => {
+    h1.innerHTML = amount;
+  });
+  
+  const address = await card.init();
+  h5.innerHTML = address;
 
   document.body.appendChild(document.createElement('hr'));
 

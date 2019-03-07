@@ -14,19 +14,9 @@ import createWallet from './walletGen';
 import tokenAbi from '../abi/humanToken.json';
 
 // set constants
-const hubUrlLocal = 'http://localhost:8080';
-const localProvider = 'http://localhost:8545';
-// // rinkeby
-// const hubUrlRinkeby = process.env.REACT_APP_RINKEBY_HUB_URL.toLowerCase();
-// const rinkebyProvider = process.env.REACT_APP_RINKEBY_RPC_URL.toLowerCase();
-// // mainnet
-// const hubUrlMainnet = process.env.REACT_APP_MAINNET_HUB_URL.toLowerCase();
-// const mainnetProvider = process.env.REACT_APP_MAINNET_RPC_URL.toLowerCase();
-
 const HASH_PREAMBLE = 'SpankWallet authentication message:';
 const DEPOSIT_MINIMUM_WEI = ethers.utils.parseEther('0.03'); // 30 FIN
 const HUB_EXCHANGE_CEILING = ethers.utils.parseEther('69'); // 69 TST
-
 const opts = {
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
@@ -37,8 +27,9 @@ const opts = {
 
 // define class
 class Card {
-  constructor(h1Ele) {
-    // remove from a 'state' object and list under `this`
+  constructor(cb) {
+    // remove from a 'state'
+    // object and list under `this`
     this.address = '';
     this.web3 = {};
     this.connext = {};
@@ -46,92 +37,61 @@ class Card {
     this.tokenContract = null;
     this.channelState = null;
     this.connextState = null;
-
-
-    this.state = {
-      // TODO: remove! currently are display elements
-      h1Ele,
-
-      // not sure what we need this for
-      exchangeRate: '0.00',
-      delegateSigner: null,
-
-      // TODO: consider pulling in from init fn
-      rpcUrl: null,
-      hubUrl: null,
-    };
+    this.stateUpdateCallback = cb;
+    this.exchangeRate = '0.00';
+    this.hubUrl = null;
+    this.rpcProvider = null;
   }
 
-  // check to see if a mnemonic exists and create wallet
-  // TODO: consider passing rpcUrl and hubUrl into init
-  async init() {
+  // TODO: take in mnemonic so that users can
+  // generate wallet from another dapplication
+  async init(hubUrl = 'http://localhost:8080', rpcProvider = 'http://localhost:8545') {
     // Set up wallet
     const mnemonic = localStorage.getItem('mnemonic');
     const delegateSigner = await createWallet(mnemonic);
     const address = await delegateSigner.getAddressString();
     this.address = address;
-    console.log('Autosigner address: ', address);
+    this.hubUrl = hubUrl;
+    this.rpcProvider = rpcProvider;
 
     // set up web3 and connext
-    await this.setWeb3(delegateSigner, localProvider);
-    await this.setConnext();
+    await this.setWeb3(delegateSigner, rpcProvider);
+    await this.setConnext(hubUrl);
     await this.setTokenContract();
     await this.authorizeHandler();
 
     // start polling for state
     await this.pollConnextState();
     await this.poller();
+
+    // return address
+    return address;
   }
 
   // ************************************************* //
   //                State setters                      //
   // ************************************************* //
-
-  // either LOCALHOST MAINNET or RINKEBY
   async setWeb3(address, rpcUrl) {
-    // let rpcUrl;
-    // let hubUrl;
-    // switch (rpc) {
-    //   case 'LOCALHOST':
-    //     rpcUrl = localProvider;
-    //     hubUrl = hubUrlLocal;
-    //     break;
-    //   case 'RINKEBY':
-    //     rpcUrl = rinkebyProvider;
-    //     hubUrl = hubUrlRinkeby;
-    //     break;
-    //   case 'MAINNET':
-    //     rpcUrl = mainnetProvider;
-    //     hubUrl = hubUrlMainnet;
-    //     break;
-    //   default:
-    //     throw new Error(`Unrecognized rpc: ${rpc}`);
-    // }
-    console.log('Custom provider with rpc:', rpcUrl);
-
     const providerOpts = new ProviderOptions(address, rpcUrl).approving();
     const provider = clientProvider(providerOpts);
     const customWeb3 = new Web3(provider);
     this.web3 = customWeb3;
   }
 
-  async setConnext() {
-    // TODO: should be set in setWeb3 fn
-    const hubUrl = 'http://localhost:8080';
+  async setConnext(hubUrl) {
     const options = {
       web3: this.web3,
-      hubUrl, // in dev-mode: http://localhost:8080,
+      hubUrl,
       user: this.address,
     };
-    console.log('Setting up connext with options:', options);
 
     // *** Instantiate the connext client ***
     const connext = await getConnextClient(options);
-    console.log(`Successfully set up connext! Connext config:`);
-    console.log(`  - tokenAddress: ${connext.opts.tokenAddress}`);
-    console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
-    console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
-    console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
+    // console.log(`Successfully set up connext! Connext config:`);
+    // console.log(`  - tokenAddress: ${connext.opts.tokenAddress}`);
+    // console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
+    // console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
+    // console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
     this.connext = connext;
     this.tokenAddress = connext.opts.tokenAddress;
   }
@@ -140,10 +100,8 @@ class Card {
     try {
       const tokenContract = new this.web3.eth.Contract(tokenAbi, this.tokenAddress);
       this.tokenContract = tokenContract;
-      console.log('Set up token contract details');
     } catch (e) {
-      console.log('Error setting token contract');
-      console.log(e);
+      console.log('Error setting token contract', e); // eslint-disable-line
     }
   }
 
@@ -152,21 +110,21 @@ class Card {
   // ************************************************* //
   async pollConnextState() {
     const that = this;
-    console.log('connext', this.connext);
     // register listeners
     this.connext.on('onStateChange', state => {
       if (state.persistent.channel) {
-        console.log('update amount');
         const balance = state.persistent.channel.balanceTokenUser;
-        const substr = balance ? getDollarSubstring(balance) : ["0","00"]
+        const substr = balance ? getDollarSubstring(balance) : ['0', '00'];
+        let cents = substr[1].substring(0, 2);
+        if (cents.length === 1) cents = `${cents}0`;
 
-        that.state.h1Ele.innerHTML = `$${substr[0]}.${substr[1].substring(0, 2)}`;
+        // call cb passed into creator fn with updated amount in card
+        that.stateUpdateCallback(`$${substr[0]}.${cents}`);
       }
-      console.log('Connext state changed:', state);
+
       that.channelState = state.persistent.channel;
       that.connextState = state;
-      // that.state.runtime = state.runtime;
-      // that.state.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
+      that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
     });
     // start polling
     await this.connext.start();
@@ -179,12 +137,7 @@ class Card {
     setInterval(async () => {
       await this.autoDeposit();
       await this.autoSwap();
-    }, 1000);
-
-    // might be able to depreciate
-    // setInterval(async () => {
-    //   await this.checkStatus();
-    // }, 400);
+    }, 10000);
   }
 
   async autoDeposit() {
@@ -221,13 +174,13 @@ class Card {
       };
 
       if (actualDeposit.amountWei === '0' && actualDeposit.amountToken === '0') {
-        console.log(`Actual deposit is 0, not depositing.`);
+        // console.log(`Actual deposit is 0, not depositing.`);
         return;
       }
 
-      console.log(`Depositing: ${JSON.stringify(actualDeposit, null, 2)}`);
-      const depositRes = await this.connext.deposit(actualDeposit);
-      console.log(`Deposit Result: ${JSON.stringify(depositRes, null, 2)}`);
+      const depositRes = await this.connext.deposit(actualDeposit); // eslint-disable-line
+      // console.log(`Depositing: ${JSON.stringify(actualDeposit, null, 2)}`);
+      // console.log(`Deposit Result: ${JSON.stringify(depositRes, null, 2)}`);
     }
   }
 
@@ -242,7 +195,7 @@ class Card {
     const weiBalance = ethers.utils.bigNumberify(channelState.balanceWeiUser);
     const tokenBalance = ethers.utils.bigNumberify(channelState.balanceTokenUser);
     if (channelState && weiBalance.gt(ethers.utils.bigNumberify('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING)) {
-      console.log(`Exchanging ${channelState.balanceWeiUser} wei`);
+      console.log(`Exchanging ${channelState.balanceWeiUser} wei`); // eslint-disable-line
       await this.connext.exchange(channelState.balanceWeiUser, 'wei');
     }
   }
@@ -251,9 +204,8 @@ class Card {
   //                    Handlers                       //
   // ************************************************* //
   async authorizeHandler() {
-    const hubUrl = 'http://localhost:8080';
     const { web3 } = this;
-    const challengeRes = await axios.post(`${hubUrl}/auth/challenge`, {}, opts);
+    const challengeRes = await axios.post(`${this.hubUrl}/auth/challenge`, {}, opts);
 
     const data = `${HASH_PREAMBLE} ${web3.utils.sha3(challengeRes.data.nonce)} ${web3.utils.sha3('localhost')}`;
     const hash = web3.utils.sha3(data);
@@ -261,7 +213,7 @@ class Card {
 
     try {
       const authRes = await axios.post(
-        `${hubUrl}/auth/response`,
+        `${this.hubUrl}/auth/response`,
         {
           nonce: challengeRes.data.nonce,
           address: this.address,
@@ -272,10 +224,10 @@ class Card {
       );
       const { token } = authRes.data;
       document.cookie = `hub.sid=${token}`;
-      console.log(`hub authentication cookie set: ${token}`);
-      const res = await axios.get(`${hubUrl}/auth/status`, opts);
-      console.log('res', res.data);
-      console.log(`Auth status: ${JSON.stringify(res.data)}`);
+      // console.log(`hub authentication cookie set: ${token}`);
+      const res = await axios.get(`${this.hubUrl}/auth/status`, opts);
+      // console.log('res', res.data);
+      // console.log(`Auth status: ${JSON.stringify(res.data)}`);
     } catch (e) {
       console.log(e);
     }
@@ -339,38 +291,22 @@ class Card {
     let balanceError, addressError;
 
     // validate that the token amount is within bounds
-    const paymentAmount = convertPayment("bn", payment.payments[0].amount);
+    const paymentAmount = convertPayment('bn', payment.payments[0].amount);
     if (paymentAmount.amountToken.gt(new BN(channelState.balanceTokenUser))) {
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      console.log("Insufficient balance in channel")
-      // balanceError = "Insufficient balance in channel";
+      console.log('Insufficient balance in channel')
+      // balanceError = 'Insufficient balance in channel';
     }
 
     if (paymentAmount.amountToken.isZero()) {
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      console.log("Please enter a payment amount above 0")
-      // balanceError = "Please enter a payment amount above 0";
+      console.log('Please enter a payment amount above 0')
+      // balanceError = 'Please enter a payment amount above 0';
     }
 
     // validate recipient is valid address OR the empty address
     // TODO: handle in other functions that structure payment object
     const { recipient } = payment.payments[0];
     if (!web3.utils.isAddress(recipient) && recipient !== emptyAddress) {
-      addressError = "Please choose a valid address";
+      addressError = 'Please choose a valid address';
     }
 
     // return if either errors exist
@@ -389,7 +325,7 @@ class Card {
       return true;
     } catch (e) {
       // TODO: throw error here
-      // console.log("SEND ERROR, SETTING");
+      // console.log('SEND ERROR, SETTING');
       // this.setState({ sendError: true, showReceipt: true });
     }
   }
@@ -398,17 +334,17 @@ class Card {
     // const { isConfirm, purchaseId, retryCount } = this.state;
     const { connext, channelState, connextState } = this;
     if (!connext || !channelState || !connextState) {
-      console.log("Connext or channel object not detected");
+      console.log('Connext or channel object not detected');
       return;
     }
 
     if (!secret) {
-      console.log("No secret detected, cannot redeem payment.");
+      console.log('No secret detected, cannot redeem payment.');
       return;
     }
 
     // if (isConfirm) {
-    //   console.log("User is creator of linked payment, not automatically redeeming.");
+    //   console.log('User is creator of linked payment, not automatically redeeming.');
     //   return;
     // }
 
@@ -424,11 +360,11 @@ class Card {
       //   this.setState({ purchaseId: updated.purchaseId, amount: updated.amount, showReceipt: true });
       // }
       // if (retryCount >= 5) {
-      //   this.setState({ purchaseId: "failed", sendError: true, showReceipt: true });
+      //   this.setState({ purchaseId: 'failed', sendError: true, showReceipt: true });
       // }
     } catch (e) {
       // TODO: throw error
-      // if (e.message.indexOf("Payment has been redeemed") !== -1) {
+      // if (e.message.indexOf('Payment has been redeemed') !== -1) {
       //   this.setState({ retryCount: 5, previouslyRedeemed: true })
       //   return
       // }
@@ -436,57 +372,6 @@ class Card {
       // console.log('retryCount', retryCount + 1)
     }
   }
-
-  // ************************************************* //
-  //                  Depreciate                       //
-  // ************************************************* //
-  // check this one later
-  // async checkStatus() {
-  //   const { runtime } = this.state;
-  //   let deposit = null;
-  //   let payment = null;
-  //   let withdraw = null;
-  //   if (runtime.syncResultsFromHub[0]) {
-  //     switch (runtime.syncResultsFromHub[0].update.reason) {
-  //       case 'ProposePendingDeposit':
-  //         deposit = 'PENDING';
-  //         break;
-  //       case 'ProposePendingWithdrawal':
-  //         withdraw = 'PENDING';
-  //         break;
-  //       case 'ConfirmPending':
-  //         withdraw = 'SUCCESS';
-  //         break;
-  //       case 'Payment':
-  //         payment = 'SUCCESS';
-  //         break;
-  //       default:
-  //         deposit = null;
-  //         withdraw = null;
-  //         payment = null;
-  //     }
-  //     // await this.setState({ status: { deposit, withdraw, payment } });
-  //   }
-  // }
-  // async closeConfirmations() {
-  //   const deposit = null;
-  //   const payment = null;
-  //   const withdraw = null;
-  //   // this.setState({ status: { deposit, payment, withdraw } });
-  // }
-  // async scanURL(amount, recipient) {
-  //   // this.setState({
-  //   //   sendScanArgs: {
-  //   //     amount,
-  //   //     recipient,
-  //   //   },
-  //   // });
-  // }
-  // async collateralHandler() {
-  //   console.log(`Requesting Collateral`);
-  //   const collateralRes = await this.state.connext.requestCollateral();
-  //   console.log(`Collateral result: ${JSON.stringify(collateralRes, null, 2)}`);
-  // }
 }
 
 export default Card;
