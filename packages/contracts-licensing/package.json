@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "The Ujo Handler Contracts",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "coverage": "./node_modules/.bin/solidity-coverage",
     "lint": "npm run lint:js && npm run lint:sol",

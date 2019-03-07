@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "The Ujo Oracle Contract",
   "main": "index.js",
+  "private": true,
   "scripts": {
     "coverage": "./node_modules/.bin/solidity-coverage",
     "lint": "npm run lint:js && npm run lint:sol",
