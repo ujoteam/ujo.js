@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/contracts-badges",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
   "description": "The Ujo Badges Contracts",
   "main": "index.js",
   "scripts": {
