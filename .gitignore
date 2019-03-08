@@ -1,7 +1,7 @@
 # Build directories
 build/
 lib/
-dist/
+# dist/
 coverage/
 tmp/
 
