@@ -1,8 +1,7 @@
 {
-  "name": "@ujomusic/config",
+  "name": "@ujoteam/config",
   "version": "0.0.1-alpha.0",
   "main": "dist/index.js",
-  "private": true,
   "scripts": {
     "build": "babel src -d dist -s"
   },

@@ -1,9 +1,8 @@
 {
-  "name": "sandbox",
+  "name": "@ujoteam/sandbox",
   "version": "1.0.1-alpha.0",
   "description": "",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --open"

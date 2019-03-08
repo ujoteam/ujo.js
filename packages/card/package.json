@@ -1,5 +1,5 @@
 {
-  "name": "@ujomusic/card",
+  "name": "@ujoteam/card",
   "version": "0.0.1-alpha.0",
   "main": "./dist/index.js",
   "scripts": {
@@ -29,5 +29,6 @@
   "devDependencies": {
     "babel-polyfill": "^6.26.0",
     "dotenv": "^6.2.0"
-  }
+  },
+  "gitHead": "a155d66af77943b49c553139970ee36f4faaf6ef"
 }
