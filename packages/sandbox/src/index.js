@@ -5,7 +5,6 @@ const main = async () => {
   h1.innerHTML = '$0.00';
   document.body.appendChild(h1);
 
-
   const h5 = document.createElement('h5');
   h5.innerHTML = '????????????????';
   document.body.appendChild(h5);
@@ -13,7 +12,7 @@ const main = async () => {
   const card = new Card(amount => {
     h1.innerHTML = amount;
   });
-  
+
   const address = await card.init();
   h5.innerHTML = address;
 
@@ -41,7 +40,6 @@ const main = async () => {
     const h4 = document.createElement('h4');
     h4.innerHTML = `Secret: ${secret}`;
     document.body.appendChild(h4);
-
   };
   document.body.appendChild(inputAmount);
   document.body.appendChild(inputAddr);

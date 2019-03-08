@@ -7,11 +7,11 @@ import { emptyAddress } from 'connext/dist/Utils';
 import { convertPayment } from 'connext/dist/types';
 import BN from 'bn.js';
 
-import ProviderOptions from '../utils/ProviderOptions';
-import clientProvider from '../utils/web3/clientProvider';
-import { getDollarSubstring } from '../utils/getDollarSubstring';
+import ProviderOptions from './utils/ProviderOptions';
+import clientProvider from './utils/web3/clientProvider';
+import { getDollarSubstring } from './utils/getDollarSubstring';
 import createWallet from './walletGen';
-import tokenAbi from '../abi/humanToken.json';
+import tokenAbi from './abi/humanToken.json';
 
 // set constants
 const HASH_PREAMBLE = 'SpankWallet authentication message:';
