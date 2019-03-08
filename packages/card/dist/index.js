@@ -31,15 +31,15 @@ var _types = require("connext/dist/types");
 
 var _bn = _interopRequireDefault(require("bn.js"));
 
-var _ProviderOptions = _interopRequireDefault(require("../utils/ProviderOptions"));
+var _ProviderOptions = _interopRequireDefault(require("./utils/ProviderOptions"));
 
-var _clientProvider = _interopRequireDefault(require("../utils/web3/clientProvider"));
+var _clientProvider = _interopRequireDefault(require("./utils/web3/clientProvider"));
 
-var _getDollarSubstring = require("../utils/getDollarSubstring");
+var _getDollarSubstring = require("./utils/getDollarSubstring");
 
 var _walletGen = _interopRequireDefault(require("./walletGen"));
 
-var _humanToken = _interopRequireDefault(require("../abi/humanToken.json"));
+var _humanToken = _interopRequireDefault(require("./abi/humanToken.json"));
 
 // set constants
 var HASH_PREAMBLE = 'SpankWallet authentication message:';
