@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/contracts-oracle",
-  "version": "",
+  "version": "0.0.0",
   "description": "The Ujo Oracle Contract",
   "main": "index.js",
   "scripts": {

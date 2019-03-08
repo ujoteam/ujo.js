@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/licensing",
-  "version": "",
+  "version": "0.0.0",
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel src -d dist -s",

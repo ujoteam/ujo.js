@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/contracts-licensing",
-  "version": "",
+  "version": "0.0.0",
   "description": "The Ujo Handler Contracts",
   "main": "index.js",
   "scripts": {
