@@ -4,30 +4,16 @@ import Tx from 'ethereumjs-tx';
 import { Buffer } from 'buffer';
 // require('dotenv').config()
 
-// TODO: fix hardcoded hub & rpc urls
-const rpcUrl = 'http://localhost:8545';
-const hubUrl = 'http://localhost:8080';
-export const DEFAULT_RPC_URL = rpcUrl;
-// const DEFAULT_NETWORK = 'ropsten'
-// export const DEFAULT_RPC_URL = process.env.NODE_ENV === "production" ? process.env.REACT_APP_RINKEBY_RPC_URL : process.env.REACT_APP_LOCAL_RPC_URL
-
-if (!DEFAULT_RPC_URL)
-  throw new Error('Missing default ethereum provider url')
-
-// export type ApproveTransactionCallback = (error: string | null, isApproved?: boolean) => void
-// export type ApproveSignCallback = (error: string | null, rawMsgSig?: string) => void
-
 export default class ProviderOptions {
 
   constructor(wallet, rpcUrl) {
     this.wallet = wallet;
-    this.rpcUrl = rpcUrl || DEFAULT_RPC_URL;
+    this.rpcUrl = rpcUrl;
   }
-  
+
   getAccounts(callback) {
-    const address = this.wallet.getAddressString()
-    console.log('address', address);
-    callback(null, address ? [address] : [])
+    const address = this.wallet.getAddressString();
+    callback(null, address ? [address] : []);
   }
 
   approveTransactionAlways(txParams, callback) {
@@ -35,24 +21,20 @@ export default class ProviderOptions {
   }
 
   signTransaction(rawTx, callback) {
-    const key = this.wallet.getPrivateKey()
+    const key = this.wallet.getPrivateKey();
 
-    if (!key) {
-      return callback('Wallet is locked.')
-    }
+    if (!key) return callback('Wallet is locked.');
 
-    let tx = new Tx(rawTx)
-    tx.sign(key)
-    let txHex = '0x' + Buffer.from(tx.serialize()).toString('hex')
-    callback(null, txHex)
+    const tx = new Tx(rawTx);
+    tx.sign(key);
+    const txHex = `0x${Buffer.from(tx.serialize()).toString('hex')}`;
+    callback(null, txHex);
   }
 
   signMessageAlways(messageParams, callback) {
     const key = this.wallet.getPrivateKey();
 
-    if (!key) {
-      return callback('Wallet is locked.');
-    }
+    if (!key) return callback('Wallet is locked.');
 
     const msg = messageParams.data;
 

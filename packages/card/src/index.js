@@ -114,12 +114,8 @@ class Card {
     this.connext.on('onStateChange', state => {
       if (state.persistent.channel) {
         const balance = state.persistent.channel.balanceTokenUser;
-        const substr = balance ? getDollarSubstring(balance) : ['0', '00'];
-        let cents = substr[1].substring(0, 2);
-        if (cents.length === 1) cents = `${cents}0`;
-
-        // call cb passed into creator fn with updated amount in card
-        that.stateUpdateCallback(`$${substr[0]}.${cents}`);
+        // balance is in Dai, return via callback so app/service can process usd amount
+        that.stateUpdateCallback(balance);
       }
 
       that.channelState = state.persistent.channel;
@@ -141,11 +137,12 @@ class Card {
   }
 
   async autoDeposit() {
-    const { connextState, tokenAddress } = this;
-    const balance = await this.web3.eth.getBalance(this.address);
+    const { connextState, tokenAddress, address, exchangeRate } = this;
+    const balance = await this.web3.eth.getBalance(address);
     let tokenBalance = '0';
+
     try {
-      tokenBalance = await this.tokenContract.methods.balanceOf(this.address).call();
+      tokenBalance = await this.tokenContract.methods.balanceOf(address).call();
     } catch (e) {
       console.warn(
         `Error fetching token balance, are you sure the token address (addr: ${tokenAddress}) is correct for the selected network (id: ${await this.web3.eth.net.getId()}))? Error: ${
@@ -155,15 +152,11 @@ class Card {
     }
 
     if (balance !== '0' || tokenBalance !== '0') {
-      if (ethers.utils.bigNumberify(balance).lte(DEPOSIT_MINIMUM_WEI)) {
-        // don't autodeposit anything under the threshold
-        return;
-      }
+      // don't autodeposit anything under the threshold
+      if (ethers.utils.bigNumberify(balance).lte(DEPOSIT_MINIMUM_WEI)) return;
+
       // only proceed with deposit request if you can deposit
-      if (!connextState || !connextState.runtime.canDeposit) {
-        // console.log("Cannot deposit");
-        return;
-      }
+      if (!connextState || !connextState.runtime.canDeposit || exchangeRate === '0.00') return;
 
       const actualDeposit = {
         amountWei: ethers.utils
@@ -184,18 +177,15 @@ class Card {
     }
   }
 
-  // not totally sure what happens here
+  // swapping wei for dai
   async autoSwap() {
     const { channelState, connextState } = this;
-    // const { channelState, connextState } = this.state;
-    if (!connextState || !connextState.runtime.canExchange) {
-      // console.log("Cannot exchange");
-      return;
-    }
-    const weiBalance = ethers.utils.bigNumberify(channelState.balanceWeiUser);
-    const tokenBalance = ethers.utils.bigNumberify(channelState.balanceTokenUser);
+    if (!connextState || !connextState.runtime.canExchange) return;
+
+    const weiBalance = new BN(channelState.balanceWeiUser);
+    const tokenBalance = new BN(channelState.balanceTokenUser);
     if (channelState && weiBalance.gt(ethers.utils.bigNumberify('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING)) {
-      console.log(`Exchanging ${channelState.balanceWeiUser} wei`); // eslint-disable-line
+      // console.log(`Exchanging ${channelState.balanceWeiUser} wei`); // eslint-disable-line
       await this.connext.exchange(channelState.balanceWeiUser, 'wei');
     }
   }
@@ -238,7 +228,7 @@ class Card {
   // ************************************************* //
   async generateRedeemableLink(value) {
     const { connext } = this;
-    // const { paymentVal } = this.state;
+    if (Number.isNaN(value)) throw new Error('Value is not a number');
 
     // generate secret, set type, and set
     // recipient to empty address
@@ -255,14 +245,12 @@ class Card {
       }]
     };
 
-    // refactored to avoid race conditions around
-    // setting state
     return this.paymentHandler(payment);
   }
 
   async generatePayment(value, recipientAddress) {
     const { connext } = this;
-    // const { paymentVal } = this.state;
+    if (Number.isNaN(value)) throw new Error('Value is not a number');
 
     // generate secret, set type, and set
     const payment = {
@@ -278,28 +266,27 @@ class Card {
       }],
     };
 
-    // refactored to avoid race conditions around
-    // setting state
-    await this.paymentHandler(payment);
+    return this.paymentHandler(payment);
   }
 
+  // returns true on a successful payment to address
+  // return the secret on a successful link generation
+  // otherwise throws an error
   async paymentHandler(payment) {
     const { connext, web3, channelState } = this;
     // const { connext, web3, channelState } = this.props;
 
-    console.log(`Submitting payment: ${JSON.stringify(payment, null, 2)}`);
+    // console.log(`Submitting payment: ${JSON.stringify(payment, null, 2)}`);
     let balanceError, addressError;
 
     // validate that the token amount is within bounds
     const paymentAmount = convertPayment('bn', payment.payments[0].amount);
     if (paymentAmount.amountToken.gt(new BN(channelState.balanceTokenUser))) {
-      console.log('Insufficient balance in channel')
-      // balanceError = 'Insufficient balance in channel';
+      balanceError = 'Insufficient balance in channel';
     }
 
-    if (paymentAmount.amountToken.isZero()) {
-      console.log('Please enter a payment amount above 0')
-      // balanceError = 'Please enter a payment amount above 0';
+    if (paymentAmount.amountToken.isZero() ) {
+      balanceError = 'Please enter a payment amount above 0';
     }
 
     // validate recipient is valid address OR the empty address
@@ -311,66 +298,46 @@ class Card {
 
     // return if either errors exist
     if (balanceError || addressError) {
-      // TODO: throw an error
-      return false;
+      const errorMessage = balanceError || addressError;
+      throw new Error(errorMessage);
     }
 
     // otherwise make payment
     try {
       let paymentRes = await connext.buy(payment);
-      console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
+      // console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
       if (payment.payments[0].type === 'PT_LINK') {
         return payment.payments[0].secret;
       }
       return true;
     } catch (e) {
-      // TODO: throw error here
-      // console.log('SEND ERROR, SETTING');
-      // this.setState({ sendError: true, showReceipt: true });
+      throw new Error(e);
     }
   }
 
   async redeemPayment(secret) {
-    // const { isConfirm, purchaseId, retryCount } = this.state;
     const { connext, channelState, connextState } = this;
-    if (!connext || !channelState || !connextState) {
-      console.log('Connext or channel object not detected');
-      return;
-    }
+    if (!connext || !channelState || !connextState) throw new Error('Connext not configured');
 
-    if (!secret) {
-      console.log('No secret detected, cannot redeem payment.');
-      return;
-    }
-
-    // if (isConfirm) {
-    //   console.log('User is creator of linked payment, not automatically redeeming.');
-    //   return;
-    // }
+    if (!secret) throw new Error('No secret detected, cannot redeem payment.');
 
     // user is not payor, can redeem payment
     try {
-      const updated = await connext.redeem(secret);
-      console.log('redeemed successs?', updated);
-      // if (!purchaseId && retryCount < 5) {
-      //   console.log('Redeeming linked payment with secret', secret)
-      //   if (updated.purchaseId == null) {
-      //     this.setState({ retryCount: retryCount + 1})
-      //   }
-      //   this.setState({ purchaseId: updated.purchaseId, amount: updated.amount, showReceipt: true });
-      // }
-      // if (retryCount >= 5) {
-      //   this.setState({ purchaseId: 'failed', sendError: true, showReceipt: true });
-      // }
+      return connext.redeem(secret);
     } catch (e) {
-      // TODO: throw error
-      // if (e.message.indexOf('Payment has been redeemed') !== -1) {
-      //   this.setState({ retryCount: 5, previouslyRedeemed: true })
-      //   return
-      // }
-      // this.setState({ retryCount: retryCount + 1 });
-      // console.log('retryCount', retryCount + 1)
+      throw new Error(e);
     }
+  }
+
+  // ************************************************* //
+  //                    Helper                         //
+  // ************************************************* //
+  convertDaiToUSDString(dai) {
+    // const balance = state.persistent.channel.balanceTokenUser;
+    const substr = dai ? getDollarSubstring(dai) : ['0', '00'];
+    let cents = substr[1].substring(0, 2);
+    if (cents.length === 1) cents = `${cents}0`;
+    return `${substr[0]}.${cents}`;
   }
 }
 
