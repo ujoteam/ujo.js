@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/card",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel src -d dist -s && cp -r ./src/abi/ ./dist/abi/",
