@@ -26,14 +26,11 @@ function () {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            mnemonic = existingMnemonic ? existingMnemonic : _bip.default.generateMnemonic();
-            console.log("Creating Wallet");
-            console.log("mnemonic", mnemonic); // let mnemonic = existingMnenomic ? existingMnenomic : bip39.generateMnemonic();
-
-            _context.next = 5;
+            mnemonic = existingMnemonic || _bip.default.generateMnemonic();
+            _context.next = 3;
             return _hdkey.default.fromMasterSeed(mnemonic).getWallet();
 
-          case 5:
+          case 3:
             wallet = _context.sent;
             // const wallet = await web3.eth.accounts.create()
             localStorage.setItem("delegateSigner", wallet.getAddressString());
@@ -41,7 +38,7 @@ function () {
             localStorage.setItem("privateKey", wallet.getPrivateKeyString());
             return _context.abrupt("return", wallet);
 
-          case 10:
+          case 8:
           case "end":
             return _context.stop();
         }

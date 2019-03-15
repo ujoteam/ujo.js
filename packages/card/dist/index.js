@@ -281,12 +281,9 @@ function () {
 
                 this.connext.on('onStateChange', function (state) {
                   if (state.persistent.channel) {
-                    var balance = state.persistent.channel.balanceTokenUser;
-                    var substr = balance ? (0, _getDollarSubstring.getDollarSubstring)(balance) : ['0', '00'];
-                    var cents = substr[1].substring(0, 2);
-                    if (cents.length === 1) cents = "".concat(cents, "0"); // call cb passed into creator fn with updated amount in card
+                    var balance = state.persistent.channel.balanceTokenUser; // balance is in Dai, return via callback so app/service can process usd amount
 
-                    that.stateUpdateCallback("$".concat(substr[0], ".").concat(cents));
+                    that.stateUpdateCallback(balance);
                   }
 
                   that.channelState = state.persistent.channel;
@@ -375,21 +372,21 @@ function () {
       var _autoDeposit = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee8() {
-        var connextState, tokenAddress, balance, tokenBalance, actualDeposit, depositRes;
+        var connextState, tokenAddress, address, exchangeRate, balance, tokenBalance, actualDeposit, depositRes;
         return _regenerator.default.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                connextState = this.connextState, tokenAddress = this.tokenAddress;
+                connextState = this.connextState, tokenAddress = this.tokenAddress, address = this.address, exchangeRate = this.exchangeRate;
                 _context8.next = 3;
-                return this.web3.eth.getBalance(this.address);
+                return this.web3.eth.getBalance(address);
 
               case 3:
                 balance = _context8.sent;
                 tokenBalance = '0';
                 _context8.prev = 5;
                 _context8.next = 8;
-                return this.tokenContract.methods.balanceOf(this.address).call();
+                return this.tokenContract.methods.balanceOf(address).call();
 
               case 8:
                 tokenBalance = _context8.sent;
@@ -425,7 +422,7 @@ function () {
                 return _context8.abrupt("return");
 
               case 24:
-                if (!(!connextState || !connextState.runtime.canDeposit)) {
+                if (!(!connextState || !connextState.runtime.canDeposit || exchangeRate === '0.00')) {
                   _context8.next = 26;
                   break;
                 }
@@ -465,7 +462,7 @@ function () {
       }
 
       return autoDeposit;
-    }() // not totally sure what happens here
+    }() // swapping wei for dai
 
   }, {
     key: "autoSwap",
@@ -478,7 +475,7 @@ function () {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                channelState = this.channelState, connextState = this.connextState; // const { channelState, connextState } = this.state;
+                channelState = this.channelState, connextState = this.connextState;
 
                 if (!(!connextState || !connextState.runtime.canExchange)) {
                   _context9.next = 3;
@@ -488,20 +485,18 @@ function () {
                 return _context9.abrupt("return");
 
               case 3:
-                weiBalance = _ethers.ethers.utils.bigNumberify(channelState.balanceWeiUser);
-                tokenBalance = _ethers.ethers.utils.bigNumberify(channelState.balanceTokenUser);
+                weiBalance = new _bn.default(channelState.balanceWeiUser);
+                tokenBalance = new _bn.default(channelState.balanceTokenUser);
 
                 if (!(channelState && weiBalance.gt(_ethers.ethers.utils.bigNumberify('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING))) {
-                  _context9.next = 9;
+                  _context9.next = 8;
                   break;
                 }
 
-                console.log("Exchanging ".concat(channelState.balanceWeiUser, " wei")); // eslint-disable-line
-
-                _context9.next = 9;
+                _context9.next = 8;
                 return this.connext.exchange(channelState.balanceWeiUser, 'wei');
 
-              case 9:
+              case 8:
               case "end":
                 return _context9.stop();
             }
@@ -597,10 +592,18 @@ function () {
           while (1) {
             switch (_context11.prev = _context11.next) {
               case 0:
-                connext = this.connext; // const { paymentVal } = this.state;
+                connext = this.connext;
+
+                if (!Number.isNaN(value)) {
+                  _context11.next = 3;
+                  break;
+                }
+
+                throw new Error('Value is not a number');
+
+              case 3:
                 // generate secret, set type, and set
                 // recipient to empty address
-
                 payment = {
                   meta: {
                     purchaseId: 'payment'
@@ -614,12 +617,10 @@ function () {
                       amountWei: '0'
                     }
                   }]
-                }; // refactored to avoid race conditions around
-                // setting state
-
+                };
                 return _context11.abrupt("return", this.paymentHandler(payment));
 
-              case 3:
+              case 5:
               case "end":
                 return _context11.stop();
             }
@@ -644,9 +645,17 @@ function () {
           while (1) {
             switch (_context12.prev = _context12.next) {
               case 0:
-                connext = this.connext; // const { paymentVal } = this.state;
-                // generate secret, set type, and set
+                connext = this.connext;
 
+                if (!Number.isNaN(value)) {
+                  _context12.next = 3;
+                  break;
+                }
+
+                throw new Error('Value is not a number');
+
+              case 3:
+                // generate secret, set type, and set
                 payment = {
                   meta: {
                     purchaseId: 'payment'
@@ -660,13 +669,10 @@ function () {
                       amountWei: '0'
                     }
                   }]
-                }; // refactored to avoid race conditions around
-                // setting state
+                };
+                return _context12.abrupt("return", this.paymentHandler(payment));
 
-                _context12.next = 4;
-                return this.paymentHandler(payment);
-
-              case 4:
+              case 5:
               case "end":
                 return _context12.stop();
             }
@@ -679,30 +685,33 @@ function () {
       }
 
       return generatePayment;
-    }()
+    }() // returns true on a successful payment to address
+    // return the secret on a successful link generation
+    // otherwise throws an error
+
   }, {
     key: "paymentHandler",
     value: function () {
       var _paymentHandler = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee13(payment) {
-        var connext, web3, channelState, balanceError, addressError, paymentAmount, recipient, paymentRes;
+        var connext, web3, channelState, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
         return _regenerator.default.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
                 connext = this.connext, web3 = this.web3, channelState = this.channelState; // const { connext, web3, channelState } = this.props;
+                // console.log(`Submitting payment: ${JSON.stringify(payment, null, 2)}`);
 
-                console.log("Submitting payment: ".concat(JSON.stringify(payment, null, 2)));
                 // validate that the token amount is within bounds
                 paymentAmount = (0, _types.convertPayment)('bn', payment.payments[0].amount);
 
                 if (paymentAmount.amountToken.gt(new _bn.default(channelState.balanceTokenUser))) {
-                  console.log('Insufficient balance in channel'); // balanceError = 'Insufficient balance in channel';
+                  balanceError = 'Insufficient balance in channel';
                 }
 
                 if (paymentAmount.amountToken.isZero()) {
-                  console.log('Please enter a payment amount above 0'); // balanceError = 'Please enter a payment amount above 0';
+                  balanceError = 'Please enter a payment amount above 0';
                 } // validate recipient is valid address OR the empty address
                 // TODO: handle in other functions that structure payment object
 
@@ -719,7 +728,8 @@ function () {
                   break;
                 }
 
-                return _context13.abrupt("return", false);
+                errorMessage = balanceError || addressError;
+                throw new Error(errorMessage);
 
               case 9:
                 _context13.prev = 9;
@@ -728,28 +738,28 @@ function () {
 
               case 12:
                 paymentRes = _context13.sent;
-                console.log("Payment result: ".concat(JSON.stringify(paymentRes, null, 2)));
 
                 if (!(payment.payments[0].type === 'PT_LINK')) {
-                  _context13.next = 16;
+                  _context13.next = 15;
                   break;
                 }
 
                 return _context13.abrupt("return", payment.payments[0].secret);
 
-              case 16:
+              case 15:
                 return _context13.abrupt("return", true);
 
-              case 19:
-                _context13.prev = 19;
+              case 18:
+                _context13.prev = 18;
                 _context13.t0 = _context13["catch"](9);
+                throw new Error(_context13.t0);
 
               case 21:
               case "end":
                 return _context13.stop();
             }
           }
-        }, _callee13, this, [[9, 19]]);
+        }, _callee13, this, [[9, 18]]);
       }));
 
       function paymentHandler(_x7) {
@@ -764,62 +774,43 @@ function () {
       var _redeemPayment = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee14(secret) {
-        var connext, channelState, connextState, updated;
+        var connext, channelState, connextState;
         return _regenerator.default.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
               case 0:
-                // const { isConfirm, purchaseId, retryCount } = this.state;
                 connext = this.connext, channelState = this.channelState, connextState = this.connextState;
 
                 if (!(!connext || !channelState || !connextState)) {
-                  _context14.next = 4;
+                  _context14.next = 3;
                   break;
                 }
 
-                console.log('Connext or channel object not detected');
-                return _context14.abrupt("return");
+                throw new Error('Connext not configured');
 
-              case 4:
+              case 3:
                 if (secret) {
-                  _context14.next = 7;
+                  _context14.next = 5;
                   break;
                 }
 
-                console.log('No secret detected, cannot redeem payment.');
-                return _context14.abrupt("return");
+                throw new Error('No secret detected, cannot redeem payment.');
 
-              case 7:
-                _context14.prev = 7;
-                _context14.next = 10;
-                return connext.redeem(secret);
+              case 5:
+                _context14.prev = 5;
+                return _context14.abrupt("return", connext.redeem(secret));
 
-              case 10:
-                updated = _context14.sent;
-                console.log('redeemed successs?', updated); // if (!purchaseId && retryCount < 5) {
-                //   console.log('Redeeming linked payment with secret', secret)
-                //   if (updated.purchaseId == null) {
-                //     this.setState({ retryCount: retryCount + 1})
-                //   }
-                //   this.setState({ purchaseId: updated.purchaseId, amount: updated.amount, showReceipt: true });
-                // }
-                // if (retryCount >= 5) {
-                //   this.setState({ purchaseId: 'failed', sendError: true, showReceipt: true });
-                // }
+              case 9:
+                _context14.prev = 9;
+                _context14.t0 = _context14["catch"](5);
+                throw new Error(_context14.t0);
 
-                _context14.next = 16;
-                break;
-
-              case 14:
-                _context14.prev = 14;
-                _context14.t0 = _context14["catch"](7);
-
-              case 16:
+              case 12:
               case "end":
                 return _context14.stop();
             }
           }
-        }, _callee14, this, [[7, 14]]);
+        }, _callee14, this, [[5, 9]]);
       }));
 
       function redeemPayment(_x8) {
@@ -827,7 +818,19 @@ function () {
       }
 
       return redeemPayment;
-    }()
+    }() // ************************************************* //
+    //                    Helper                         //
+    // ************************************************* //
+
+  }, {
+    key: "convertDaiToUSDString",
+    value: function convertDaiToUSDString(dai) {
+      // const balance = state.persistent.channel.balanceTokenUser;
+      var substr = dai ? (0, _getDollarSubstring.getDollarSubstring)(dai) : ['0', '00'];
+      var cents = substr[1].substring(0, 2);
+      if (cents.length === 1) cents = "".concat(cents, "0");
+      return "".concat(substr[0], ".").concat(cents);
+    }
   }]);
   return Card;
 }();
