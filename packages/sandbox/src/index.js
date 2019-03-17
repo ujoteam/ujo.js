@@ -10,7 +10,7 @@ const main = async () => {
   document.body.appendChild(h5);
 
   const card = new Card(amount => {
-    h1.innerHTML = amount;
+    h1.innerHTML = `$${card.convertDaiToUSDString(amount)}`;
   });
 
   const address = await card.init();
@@ -55,8 +55,6 @@ const main = async () => {
   const button1 = document.createElement('button');
   button1.innerHTML = 'Redeem From Secret';
   button1.onclick = (e) => {
-    console.log('input value', inputSecret);
-    console.log('inputSecret value', inputSecret.value);
     card.redeemPayment(inputSecret.value);
   };
   document.body.appendChild(inputSecret);
