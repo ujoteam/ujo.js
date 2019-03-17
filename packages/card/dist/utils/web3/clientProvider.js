@@ -49,7 +49,7 @@ var clientProvider = function clientProvider() {
 
   var inflightCache = new _inflightCache.default();
   engine.addProvider(inflightCache);
-  var gasprice = new _GaspriceSubprovider.default();
+  var gasprice = new _GaspriceSubprovider.default(opts.hubUrl);
   engine.addProvider(gasprice);
   var idmgmtSubprovider = new _hookedWallet.default((0, _objectSpread2.default)({}, opts));
   engine.addProvider(idmgmtSubprovider); // data source

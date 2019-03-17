@@ -23,10 +23,11 @@ var _buffer = require("buffer");
 var ProviderOptions =
 /*#__PURE__*/
 function () {
-  function ProviderOptions(wallet, rpcUrl) {
+  function ProviderOptions(wallet, rpcUrl, hubUrl) {
     (0, _classCallCheck2.default)(this, ProviderOptions);
     this.wallet = wallet;
     this.rpcUrl = rpcUrl;
+    this.hubUrl = hubUrl;
   }
 
   (0, _createClass2.default)(ProviderOptions, [{
