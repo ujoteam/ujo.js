@@ -65,7 +65,6 @@ class Card {
     await this.setWeb3(delegateSigner, rpcProvider, hubUrl);
     await this.setConnext(hubUrl);
     await this.setTokenContract();
-    await this.authorizeHandler();
 
     // start polling for state
     await this.pollConnextState();
@@ -91,6 +90,7 @@ class Card {
       web3: this.web3,
       hubUrl,
       user: this.address,
+      origin: 'localhost'
     };
 
     // *** Instantiate the connext client ***
@@ -185,7 +185,7 @@ class Card {
       web3,
       browserMinimumBalance,
     } = this;
-    if (!rpcProvider) return;
+    if (!rpcProvider || !browserMinimumBalance) return;
 
     const balance = await web3.eth.getBalance(address);
 
@@ -211,7 +211,7 @@ class Card {
       // if (!connextState || exchangeRate === '0.00') return;
 
       const channelDeposit = {
-        amountWei: new BigNumber(balance).toFixed(0),
+        amountWei: new BigNumber(new BigNumber(balance).minus(minWei)).toFixed(0),
         amountToken: tokenBalance,
       };
 
@@ -263,38 +263,6 @@ class Card {
     }
   }
 
-  // ************************************************* //
-  //                    Handlers                       //
-  // ************************************************* //
-  async authorizeHandler() {
-    const { web3 } = this;
-    const challengeRes = await axios.post(`${this.hubUrl}/auth/challenge`, {}, opts);
-
-    const data = `${HASH_PREAMBLE} ${web3.utils.sha3(challengeRes.data.nonce)} ${web3.utils.sha3('localhost')}`;
-    const hash = web3.utils.sha3(data);
-    const signature = await web3.eth.personal.sign(hash, this.address, null);
-
-    try {
-      const authRes = await axios.post(
-        `${this.hubUrl}/auth/response`,
-        {
-          nonce: challengeRes.data.nonce,
-          address: this.address,
-          origin: 'localhost',
-          signature,
-        },
-        opts,
-      );
-      const { token } = authRes.data;
-      document.cookie = `hub.sid=${token}`;
-      // console.log(`hub authentication cookie set: ${token}`);
-      const res = await axios.get(`${this.hubUrl}/auth/status`, opts);
-      // console.log('res', res.data);
-      // console.log(`Auth status: ${JSON.stringify(res.data)}`);
-    } catch (e) {
-      console.log(e);
-    }
-  }
 
   // ************************************************* //
   //                  Send Funds                       //
