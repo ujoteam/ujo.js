@@ -13,7 +13,17 @@ const main = async () => {
     h1.innerHTML = `$${card.convertDaiToUSDString(amount)}`;
   });
 
+  // TODO: implement a `.env` in the card, or somewhere, that inserts the
+  // following values depending on the eth network being used
+  // rinkeby
+  // const address = await card.init("https://daicard.io/api/rinkeby/hub", "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w");
+
+  // // mainnet
+  // const address = await card.init("https://daicard.io/api/mainnet/hub", "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-");
+
+  // local development
   const address = await card.init();
+
   h5.innerHTML = address;
 
   document.body.appendChild(document.createElement('hr'));
