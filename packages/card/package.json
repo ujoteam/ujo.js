@@ -3,7 +3,7 @@
   "version": "0.0.1-alpha.5",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "babel src -d dist -s && cp -r ./src/abi/ ./dist/abi/",
+    "build": "./node_modules/.bin/babel src -d dist -s && cp -r ./src/abi/ ./dist/abi/",
     "build:docs": "esdoc -c .esdoc.json",
     "test": "NODE_ENV=TEST ../../node_modules/.bin/mocha ./test --require @babel/register --trace-warnings --exit --colors --recursive --reporter spec"
   },
