@@ -90,7 +90,7 @@ class Card {
       web3: this.web3,
       hubUrl,
       user: this.address,
-      origin: window.location.origin.toLowerCase(), // 'localhost'
+      origin: 'localhost'
     };
 
     // *** Instantiate the connext client ***
@@ -185,7 +185,7 @@ class Card {
       web3,
       browserMinimumBalance,
     } = this;
-    if (!rpcProvider) return;
+    if (!rpcProvider || !browserMinimumBalance) return;
 
     const balance = await web3.eth.getBalance(address);
 
@@ -211,7 +211,7 @@ class Card {
       // if (!connextState || exchangeRate === '0.00') return;
 
       const channelDeposit = {
-        amountWei: new BigNumber(balance).toFixed(0),
+        amountWei: new BigNumber(new BigNumber(balance).minus(minWei)).toFixed(0),
         amountToken: tokenBalance,
       };
 
