@@ -1,8 +1,6 @@
 import 'babel-polyfill';
 import { getConnextClient } from 'connext/dist/Connext';
-import axios from 'axios';
 import Web3 from 'web3';
-import { ethers } from 'ethers';
 import { emptyAddress } from 'connext/dist/Utils';
 import { convertPayment } from 'connext/dist/types';
 import getExchangeRates from 'connext/dist/lib/getExchangeRates';
@@ -19,18 +17,9 @@ import createWallet from './walletGen';
 import tokenAbi from './abi/humanToken.json';
 
 // set constants
-const HASH_PREAMBLE = 'SpankWallet authentication message:';
-// const DEPOSIT_MINIMUM_WEI = ethers.utils.parseEther('0.03'); // 30 FIN
 const DEPOSIT_ESTIMATED_GAS = new BigNumber('700000') // 700k gas
 const HUB_EXCHANGE_CEILING = new BigNumber(Web3.utils.toWei('69', 'ether')); // 69 TST
-const CHANNEL_DEPOSIT_MAX = new BigNumber(Web3.utils.toWei('30', 'ether')); // 30 TST
-const opts = {
-  headers: {
-    'Content-Type': 'application/json; charset=utf-8',
-    Authorization: 'Bearer foo',
-  },
-  withCredentials: true,
-};
+const CHANNEL_DEPOSIT_MAX = new BigNumber(Web3.utils.toWei('30', 'ether')); // 30 TST=
 
 // define class
 class Card {
@@ -90,7 +79,7 @@ class Card {
       web3: this.web3,
       hubUrl,
       user: this.address,
-      origin: 'localhost'
+      origin: 'localhost',
     };
 
     // *** Instantiate the connext client ***
@@ -132,6 +121,7 @@ class Card {
       that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
       that.runtime = state.runtime;
     });
+
     // start polling
     await this.connext.start();
   }
@@ -321,7 +311,8 @@ class Card {
     const { connext, web3, channelState } = this;
 
     // check if the recipient needs collateral
-    await connext.recipientNeedsCollateral(
+    // is utilized later in fn. Consider in a v2
+    const needsCollateral = await connext.recipientNeedsCollateral(
       payment.payments[0].recipient,
       convertPayment('str', payment.payments[0].amount)
     );
@@ -351,6 +342,15 @@ class Card {
       throw new Error(errorMessage);
     }
 
+    // comment back in later if needed
+    // if (needsCollateral && payment.payments[0].type !== 'PT_LINK') {
+    //   try {
+    //     await this.tryToCollateralize(payment);
+    //   } catch (e) {
+    //     throw e;
+    //   }
+    // }
+
     // otherwise make payment
     try {
       let paymentRes = await connext.buy(payment);
@@ -362,6 +362,72 @@ class Card {
     } catch (e) {
       throw new Error(e);
     }
+  }
+
+
+  async collateralizeRecipient(payment) {
+    const { connext } = this;
+    // do not collateralize on pt link payments
+    if (payment.payments[0].type === 'PT_LINK') return;
+
+    // collateralize by sending payment
+    // const err = await this._sendPayment(payment, true);
+    const success = await connext.buy(payment);
+    // somehow it worked???
+    if (success) return;
+
+    // call to send payment failed, monitor collateral
+    // watch for confirmation on the recipients side
+    // of the channel for 20s
+    let needsCollateral
+    await setInterval(
+      async (iteration, stop) => {
+        // returns null if no collateral needed
+        needsCollateral = await connext.recipientNeedsCollateral(
+          payment.payments[0].recipient,
+          convertPayment('str', payment.payments[0].amount)
+        );
+        if (!needsCollateral || iteration > 20) {
+          stop();
+        }
+      },
+      5000,
+      { iterations: 20 }
+    );
+
+    if (needsCollateral) {
+      this.setState({
+        showReceipt: true,
+        paymentState: PaymentStates.CollateralTimeout
+      });
+      return CollateralStates.Timeout;
+    }
+
+    return CollateralStates.Success;
+  }
+
+  // not utilized yet
+  tryToCollateralize(payment) {
+    const { connext } = this;
+    let iteration = 0;
+    return new Promise((res, rej) => {
+      const collateralizeInterval = setInterval(async () => {
+        console.log('interval', iteration);
+        const needsCollateral = await connext.recipientNeedsCollateral(
+          payment.payments[0].recipient,
+          convertPayment('str', payment.payments[0].amount),
+        );
+        if (!needsCollateral) {
+          console.log('successfulyl collateralized')
+          res(true);
+          clearInterval(collateralizeInterval);
+        } else if (iteration >= 20) {
+          rej(new Error('Unable to collateralize'));
+          clearInterval(collateralizeInterval);
+        }
+        iteration += 1;
+      }, 5000);
+    });
   }
 
   async redeemPayment(secret) {

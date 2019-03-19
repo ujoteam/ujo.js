@@ -19,11 +19,7 @@ require("babel-polyfill");
 
 var _Connext = require("connext/dist/Connext");
 
-var _axios = _interopRequireDefault(require("axios"));
-
 var _web = _interopRequireDefault(require("web3"));
-
-var _ethers = require("ethers");
 
 var _Utils = require("connext/dist/Utils");
 
@@ -50,21 +46,12 @@ var _walletGen = _interopRequireDefault(require("./walletGen"));
 var _humanToken = _interopRequireDefault(require("./abi/humanToken.json"));
 
 // set constants
-var HASH_PREAMBLE = 'SpankWallet authentication message:'; // const DEPOSIT_MINIMUM_WEI = ethers.utils.parseEther('0.03'); // 30 FIN
-
 var DEPOSIT_ESTIMATED_GAS = new _bignumber.default('700000'); // 700k gas
 
 var HUB_EXCHANGE_CEILING = new _bignumber.default(_web.default.utils.toWei('69', 'ether')); // 69 TST
 
-var CHANNEL_DEPOSIT_MAX = new _bignumber.default(_web.default.utils.toWei('30', 'ether')); // 30 TST
-
-var opts = {
-  headers: {
-    'Content-Type': 'application/json; charset=utf-8',
-    Authorization: 'Bearer foo'
-  },
-  withCredentials: true
-}; // define class
+var CHANNEL_DEPOSIT_MAX = new _bignumber.default(_web.default.utils.toWei('30', 'ether')); // 30 TST=
+// define class
 
 var Card =
 /*#__PURE__*/
@@ -135,24 +122,20 @@ function () {
 
               case 18:
                 _context.next = 20;
-                return this.authorizeHandler();
+                return this.pollConnextState();
 
               case 20:
                 _context.next = 22;
-                return this.pollConnextState();
+                return this.setBrowserWalletMinimumBalance();
 
               case 22:
                 _context.next = 24;
-                return this.setBrowserWalletMinimumBalance();
-
-              case 24:
-                _context.next = 26;
                 return this.poller();
 
-              case 26:
+              case 24:
                 return _context.abrupt("return", address);
 
-              case 27:
+              case 25:
               case "end":
                 return _context.stop();
             }
@@ -213,7 +196,8 @@ function () {
                 options = {
                   web3: this.web3,
                   hubUrl: hubUrl,
-                  user: this.address
+                  user: this.address,
+                  origin: 'localhost'
                 }; // *** Instantiate the connext client ***
 
                 _context3.next = 3;
@@ -467,7 +451,7 @@ function () {
               case 0:
                 address = this.address, tokenContract = this.tokenContract, connextState = this.connextState, tokenAddress = this.tokenAddress, exchangeRate = this.exchangeRate, rpcProvider = this.rpcProvider, web3 = this.web3, browserMinimumBalance = this.browserMinimumBalance;
 
-                if (rpcProvider) {
+                if (!(!rpcProvider || !browserMinimumBalance)) {
                   _context10.next = 3;
                   break;
                 }
@@ -532,7 +516,7 @@ function () {
               case 29:
                 // if (!connextState || exchangeRate === '0.00') return;
                 channelDeposit = {
-                  amountWei: new _bignumber.default(balance).toFixed(0),
+                  amountWei: new _bignumber.default(new _bignumber.default(balance).minus(minWei)).toFixed(0),
                   amountToken: tokenBalance
                 };
 
@@ -621,74 +605,6 @@ function () {
 
       return autoSwap;
     }() // ************************************************* //
-    //                    Handlers                       //
-    // ************************************************* //
-
-  }, {
-    key: "authorizeHandler",
-    value: function () {
-      var _authorizeHandler = (0, _asyncToGenerator2.default)(
-      /*#__PURE__*/
-      _regenerator.default.mark(function _callee12() {
-        var web3, challengeRes, data, hash, signature, authRes, token, res;
-        return _regenerator.default.wrap(function _callee12$(_context12) {
-          while (1) {
-            switch (_context12.prev = _context12.next) {
-              case 0:
-                web3 = this.web3;
-                _context12.next = 3;
-                return _axios.default.post("".concat(this.hubUrl, "/auth/challenge"), {}, opts);
-
-              case 3:
-                challengeRes = _context12.sent;
-                data = "".concat(HASH_PREAMBLE, " ").concat(web3.utils.sha3(challengeRes.data.nonce), " ").concat(web3.utils.sha3('localhost'));
-                hash = web3.utils.sha3(data);
-                _context12.next = 8;
-                return web3.eth.personal.sign(hash, this.address, null);
-
-              case 8:
-                signature = _context12.sent;
-                _context12.prev = 9;
-                _context12.next = 12;
-                return _axios.default.post("".concat(this.hubUrl, "/auth/response"), {
-                  nonce: challengeRes.data.nonce,
-                  address: this.address,
-                  origin: 'localhost',
-                  signature: signature
-                }, opts);
-
-              case 12:
-                authRes = _context12.sent;
-                token = authRes.data.token;
-                document.cookie = "hub.sid=".concat(token); // console.log(`hub authentication cookie set: ${token}`);
-
-                _context12.next = 17;
-                return _axios.default.get("".concat(this.hubUrl, "/auth/status"), opts);
-
-              case 17:
-                res = _context12.sent;
-                _context12.next = 23;
-                break;
-
-              case 20:
-                _context12.prev = 20;
-                _context12.t0 = _context12["catch"](9);
-                console.log(_context12.t0);
-
-              case 23:
-              case "end":
-                return _context12.stop();
-            }
-          }
-        }, _callee12, this, [[9, 20]]);
-      }));
-
-      function authorizeHandler() {
-        return _authorizeHandler.apply(this, arguments);
-      }
-
-      return authorizeHandler;
-    }() // ************************************************* //
     //                  Send Funds                       //
     // ************************************************* //
 
@@ -697,16 +613,16 @@ function () {
     value: function () {
       var _generateRedeemableLink = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee13(value) {
+      _regenerator.default.mark(function _callee12(value) {
         var connext, payment;
-        return _regenerator.default.wrap(function _callee13$(_context13) {
+        return _regenerator.default.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 connext = this.connext;
 
                 if (!Number.isNaN(value)) {
-                  _context13.next = 3;
+                  _context12.next = 3;
                   break;
                 }
 
@@ -729,14 +645,14 @@ function () {
                     }
                   }]
                 };
-                return _context13.abrupt("return", this.paymentHandler(payment));
+                return _context12.abrupt("return", this.paymentHandler(payment));
 
               case 5:
               case "end":
-                return _context13.stop();
+                return _context12.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee12, this);
       }));
 
       function generateRedeemableLink(_x5) {
@@ -750,16 +666,16 @@ function () {
     value: function () {
       var _generatePayment = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee14(value, recipientAddress) {
+      _regenerator.default.mark(function _callee13(value, recipientAddress) {
         var connext, payment;
-        return _regenerator.default.wrap(function _callee14$(_context14) {
+        return _regenerator.default.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 connext = this.connext;
 
                 if (!Number.isNaN(value)) {
-                  _context14.next = 3;
+                  _context13.next = 3;
                   break;
                 }
 
@@ -781,14 +697,14 @@ function () {
                     }
                   }]
                 };
-                return _context14.abrupt("return", this.paymentHandler(payment));
+                return _context13.abrupt("return", this.paymentHandler(payment));
 
               case 5:
               case "end":
-                return _context14.stop();
+                return _context13.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee13, this);
       }));
 
       function generatePayment(_x6, _x7) {
@@ -805,18 +721,20 @@ function () {
     value: function () {
       var _paymentHandler = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee15(payment) {
-        var connext, web3, channelState, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
-        return _regenerator.default.wrap(function _callee15$(_context15) {
+      _regenerator.default.mark(function _callee14(payment) {
+        var connext, web3, channelState, needsCollateral, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
+        return _regenerator.default.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
                 connext = this.connext, web3 = this.web3, channelState = this.channelState; // check if the recipient needs collateral
+                // is utilized later in fn. Consider in a v2
 
-                _context15.next = 3;
+                _context14.next = 3;
                 return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
 
               case 3:
+                needsCollateral = _context14.sent;
                 // validate that the token amount is within bounds
                 paymentAmount = (0, _types.convertPayment)('bn', payment.payments[0].amount);
 
@@ -838,42 +756,42 @@ function () {
 
 
                 if (!(balanceError || addressError)) {
-                  _context15.next = 11;
+                  _context14.next = 12;
                   break;
                 }
 
                 errorMessage = balanceError || addressError;
                 throw new Error(errorMessage);
 
-              case 11:
-                _context15.prev = 11;
-                _context15.next = 14;
+              case 12:
+                _context14.prev = 12;
+                _context14.next = 15;
                 return connext.buy(payment);
 
-              case 14:
-                paymentRes = _context15.sent;
+              case 15:
+                paymentRes = _context14.sent;
 
                 if (!(payment.payments[0].type === 'PT_LINK')) {
-                  _context15.next = 17;
+                  _context14.next = 18;
                   break;
                 }
 
-                return _context15.abrupt("return", payment.payments[0].secret);
+                return _context14.abrupt("return", payment.payments[0].secret);
 
-              case 17:
-                return _context15.abrupt("return", true);
+              case 18:
+                return _context14.abrupt("return", true);
 
-              case 20:
-                _context15.prev = 20;
-                _context15.t0 = _context15["catch"](11);
-                throw new Error(_context15.t0);
+              case 21:
+                _context14.prev = 21;
+                _context14.t0 = _context14["catch"](12);
+                throw new Error(_context14.t0);
 
-              case 23:
+              case 24:
               case "end":
-                return _context15.stop();
+                return _context14.stop();
             }
           }
-        }, _callee15, this, [[11, 20]]);
+        }, _callee14, this, [[12, 21]]);
       }));
 
       function paymentHandler(_x8) {
@@ -883,20 +801,164 @@ function () {
       return paymentHandler;
     }()
   }, {
-    key: "redeemPayment",
+    key: "collateralizeRecipient",
     value: function () {
-      var _redeemPayment = (0, _asyncToGenerator2.default)(
+      var _collateralizeRecipient = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee16(secret) {
-        var connext, channelState, connextState;
+      _regenerator.default.mark(function _callee16(payment) {
+        var connext, success, needsCollateral;
         return _regenerator.default.wrap(function _callee16$(_context16) {
           while (1) {
             switch (_context16.prev = _context16.next) {
               case 0:
+                connext = this.connext; // do not collateralize on pt link payments
+
+                if (!(payment.payments[0].type === 'PT_LINK')) {
+                  _context16.next = 3;
+                  break;
+                }
+
+                return _context16.abrupt("return");
+
+              case 3:
+                _context16.next = 5;
+                return connext.buy(payment);
+
+              case 5:
+                success = _context16.sent;
+
+                if (!success) {
+                  _context16.next = 8;
+                  break;
+                }
+
+                return _context16.abrupt("return");
+
+              case 8:
+                _context16.next = 10;
+                return setInterval(
+                /*#__PURE__*/
+                function () {
+                  var _ref3 = (0, _asyncToGenerator2.default)(
+                  /*#__PURE__*/
+                  _regenerator.default.mark(function _callee15(iteration, stop) {
+                    return _regenerator.default.wrap(function _callee15$(_context15) {
+                      while (1) {
+                        switch (_context15.prev = _context15.next) {
+                          case 0:
+                            _context15.next = 2;
+                            return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
+
+                          case 2:
+                            needsCollateral = _context15.sent;
+
+                            if (!needsCollateral || iteration > 20) {
+                              stop();
+                            }
+
+                          case 4:
+                          case "end":
+                            return _context15.stop();
+                        }
+                      }
+                    }, _callee15);
+                  }));
+
+                  return function (_x10, _x11) {
+                    return _ref3.apply(this, arguments);
+                  };
+                }(), 5000, {
+                  iterations: 20
+                });
+
+              case 10:
+                if (!needsCollateral) {
+                  _context16.next = 13;
+                  break;
+                }
+
+                this.setState({
+                  showReceipt: true,
+                  paymentState: PaymentStates.CollateralTimeout
+                });
+                return _context16.abrupt("return", CollateralStates.Timeout);
+
+              case 13:
+                return _context16.abrupt("return", CollateralStates.Success);
+
+              case 14:
+              case "end":
+                return _context16.stop();
+            }
+          }
+        }, _callee16, this);
+      }));
+
+      function collateralizeRecipient(_x9) {
+        return _collateralizeRecipient.apply(this, arguments);
+      }
+
+      return collateralizeRecipient;
+    }() // not utilized yet
+
+  }, {
+    key: "tryToCollateralize",
+    value: function tryToCollateralize(payment) {
+      var connext = this.connext;
+      var iteration = 0;
+      return new Promise(function (res, rej) {
+        var collateralizeInterval = setInterval(
+        /*#__PURE__*/
+        (0, _asyncToGenerator2.default)(
+        /*#__PURE__*/
+        _regenerator.default.mark(function _callee17() {
+          var needsCollateral;
+          return _regenerator.default.wrap(function _callee17$(_context17) {
+            while (1) {
+              switch (_context17.prev = _context17.next) {
+                case 0:
+                  console.log('interval', iteration);
+                  _context17.next = 3;
+                  return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
+
+                case 3:
+                  needsCollateral = _context17.sent;
+
+                  if (!needsCollateral) {
+                    console.log('successfulyl collateralized');
+                    res(true);
+                    clearInterval(collateralizeInterval);
+                  } else if (iteration >= 20) {
+                    rej(new Error('Unable to collateralize'));
+                    clearInterval(collateralizeInterval);
+                  }
+
+                  iteration += 1;
+
+                case 6:
+                case "end":
+                  return _context17.stop();
+              }
+            }
+          }, _callee17);
+        })), 5000);
+      });
+    }
+  }, {
+    key: "redeemPayment",
+    value: function () {
+      var _redeemPayment = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee18(secret) {
+        var connext, channelState, connextState;
+        return _regenerator.default.wrap(function _callee18$(_context18) {
+          while (1) {
+            switch (_context18.prev = _context18.next) {
+              case 0:
                 connext = this.connext, channelState = this.channelState, connextState = this.connextState;
 
                 if (!(!connext || !channelState || !connextState)) {
-                  _context16.next = 3;
+                  _context18.next = 3;
                   break;
                 }
 
@@ -904,30 +966,30 @@ function () {
 
               case 3:
                 if (secret) {
-                  _context16.next = 5;
+                  _context18.next = 5;
                   break;
                 }
 
                 throw new Error('No secret detected, cannot redeem payment.');
 
               case 5:
-                _context16.prev = 5;
-                return _context16.abrupt("return", connext.redeem(secret));
+                _context18.prev = 5;
+                return _context18.abrupt("return", connext.redeem(secret));
 
               case 9:
-                _context16.prev = 9;
-                _context16.t0 = _context16["catch"](5);
-                throw new Error(_context16.t0);
+                _context18.prev = 9;
+                _context18.t0 = _context18["catch"](5);
+                throw new Error(_context18.t0);
 
               case 12:
               case "end":
-                return _context16.stop();
+                return _context18.stop();
             }
           }
-        }, _callee16, this, [[5, 9]]);
+        }, _callee18, this, [[5, 9]]);
       }));
 
-      function redeemPayment(_x9) {
+      function redeemPayment(_x12) {
         return _redeemPayment.apply(this, arguments);
       }
 
