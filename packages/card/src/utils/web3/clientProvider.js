@@ -36,7 +36,7 @@ const clientProvider = (opts = {}) => {
   const inflightCache = new InflightCacheSubprovider();
   engine.addProvider(inflightCache);
 
-  const gasprice = new GaspriceSubprovider();
+  const gasprice = new GaspriceSubprovider(opts.hubUrl);
   engine.addProvider(gasprice);
 
   const idmgmtSubprovider = new HookedWalletSubprovider({

@@ -19,15 +19,19 @@ require("babel-polyfill");
 
 var _Connext = require("connext/dist/Connext");
 
-var _axios = _interopRequireDefault(require("axios"));
-
 var _web = _interopRequireDefault(require("web3"));
-
-var _ethers = require("ethers");
 
 var _Utils = require("connext/dist/Utils");
 
 var _types = require("connext/dist/types");
+
+var _getExchangeRates = _interopRequireDefault(require("connext/dist/lib/getExchangeRates"));
+
+var _CurrencyTypes = require("connext/dist/state/ConnextState/CurrencyTypes");
+
+var _CurrencyConvertable = _interopRequireDefault(require("connext/dist/lib/currency/CurrencyConvertable"));
+
+var _bignumber = _interopRequireDefault(require("bignumber.js"));
 
 var _bn = _interopRequireDefault(require("bn.js"));
 
@@ -42,21 +46,12 @@ var _walletGen = _interopRequireDefault(require("./walletGen"));
 var _humanToken = _interopRequireDefault(require("./abi/humanToken.json"));
 
 // set constants
-var HASH_PREAMBLE = 'SpankWallet authentication message:';
+var DEPOSIT_ESTIMATED_GAS = new _bignumber.default('700000'); // 700k gas
 
-var DEPOSIT_MINIMUM_WEI = _ethers.ethers.utils.parseEther('0.03'); // 30 FIN
+var HUB_EXCHANGE_CEILING = new _bignumber.default(_web.default.utils.toWei('69', 'ether')); // 69 TST
 
-
-var HUB_EXCHANGE_CEILING = _ethers.ethers.utils.parseEther('69'); // 69 TST
-
-
-var opts = {
-  headers: {
-    'Content-Type': 'application/json; charset=utf-8',
-    Authorization: 'Bearer foo'
-  },
-  withCredentials: true
-}; // define class
+var CHANNEL_DEPOSIT_MAX = new _bignumber.default(_web.default.utils.toWei('30', 'ether')); // 30 TST=
+// define class
 
 var Card =
 /*#__PURE__*/
@@ -115,7 +110,7 @@ function () {
                 this.rpcProvider = rpcProvider; // set up web3 and connext
 
                 _context.next = 14;
-                return this.setWeb3(delegateSigner, rpcProvider);
+                return this.setWeb3(delegateSigner, rpcProvider, hubUrl);
 
               case 14:
                 _context.next = 16;
@@ -127,11 +122,11 @@ function () {
 
               case 18:
                 _context.next = 20;
-                return this.authorizeHandler();
+                return this.pollConnextState();
 
               case 20:
                 _context.next = 22;
-                return this.pollConnextState();
+                return this.setBrowserWalletMinimumBalance();
 
               case 22:
                 _context.next = 24;
@@ -162,13 +157,13 @@ function () {
     value: function () {
       var _setWeb = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee2(address, rpcUrl) {
+      _regenerator.default.mark(function _callee2(address, rpcUrl, hubUrl) {
         var providerOpts, provider, customWeb3;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                providerOpts = new _ProviderOptions.default(address, rpcUrl).approving();
+                providerOpts = new _ProviderOptions.default(address, rpcUrl, hubUrl).approving();
                 provider = (0, _clientProvider.default)(providerOpts);
                 customWeb3 = new _web.default(provider);
                 this.web3 = customWeb3;
@@ -181,7 +176,7 @@ function () {
         }, _callee2, this);
       }));
 
-      function setWeb3(_x, _x2) {
+      function setWeb3(_x, _x2, _x3) {
         return _setWeb.apply(this, arguments);
       }
 
@@ -201,7 +196,8 @@ function () {
                 options = {
                   web3: this.web3,
                   hubUrl: hubUrl,
-                  user: this.address
+                  user: this.address,
+                  origin: 'localhost'
                 }; // *** Instantiate the connext client ***
 
                 _context3.next = 3;
@@ -225,7 +221,7 @@ function () {
         }, _callee3, this);
       }));
 
-      function setConnext(_x3) {
+      function setConnext(_x4) {
         return _setConnext.apply(this, arguments);
       }
 
@@ -280,6 +276,7 @@ function () {
                 that = this; // register listeners
 
                 this.connext.on('onStateChange', function (state) {
+                  // console.log('STATE cHANEGE', state)
                   if (state.persistent.channel) {
                     var balance = state.persistent.channel.balanceTokenUser; // balance is in Dai, return via callback so app/service can process usd amount
 
@@ -289,6 +286,7 @@ function () {
                   that.channelState = state.persistent.channel;
                   that.connextState = state;
                   that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
+                  that.runtime = state.runtime;
                 }); // start polling
 
                 _context5.next = 4;
@@ -313,21 +311,22 @@ function () {
     value: function () {
       var _poller = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee7() {
+      _regenerator.default.mark(function _callee8() {
         var _this = this;
 
-        return _regenerator.default.wrap(function _callee7$(_context7) {
+        return _regenerator.default.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                _context7.next = 2;
+                _context8.next = 2;
                 return this.autoDeposit();
 
               case 2:
-                _context7.next = 4;
+                _context8.next = 4;
                 return this.autoSwap();
 
               case 4:
+                // await this.connext.requestCollateral();
                 setInterval(
                 /*#__PURE__*/
                 (0, _asyncToGenerator2.default)(
@@ -341,23 +340,40 @@ function () {
                           return _this.autoDeposit();
 
                         case 2:
-                          _context6.next = 4;
-                          return _this.autoSwap();
-
-                        case 4:
                         case "end":
                           return _context6.stop();
                       }
                     }
                   }, _callee6);
-                })), 10000);
+                })), 5000);
+                setInterval(
+                /*#__PURE__*/
+                (0, _asyncToGenerator2.default)(
+                /*#__PURE__*/
+                _regenerator.default.mark(function _callee7() {
+                  return _regenerator.default.wrap(function _callee7$(_context7) {
+                    while (1) {
+                      switch (_context7.prev = _context7.next) {
+                        case 0:
+                          _context7.next = 2;
+                          return _this.autoSwap();
 
-              case 5:
+                        case 2:
+                        case "end":
+                          return _context7.stop();
+                      }
+                    }
+                  }, _callee7);
+                })), 500); // setInterval(async () => {
+                //   await this.checkStatus();
+                // }, 400)
+
+              case 6:
               case "end":
-                return _context7.stop();
+                return _context8.stop();
             }
           }
-        }, _callee7, this);
+        }, _callee8, this);
       }));
 
       function poller() {
@@ -367,117 +383,19 @@ function () {
       return poller;
     }()
   }, {
-    key: "autoDeposit",
+    key: "setBrowserWalletMinimumBalance",
     value: function () {
-      var _autoDeposit = (0, _asyncToGenerator2.default)(
-      /*#__PURE__*/
-      _regenerator.default.mark(function _callee8() {
-        var connextState, tokenAddress, address, exchangeRate, balance, tokenBalance, actualDeposit, depositRes;
-        return _regenerator.default.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                connextState = this.connextState, tokenAddress = this.tokenAddress, address = this.address, exchangeRate = this.exchangeRate;
-                _context8.next = 3;
-                return this.web3.eth.getBalance(address);
-
-              case 3:
-                balance = _context8.sent;
-                tokenBalance = '0';
-                _context8.prev = 5;
-                _context8.next = 8;
-                return this.tokenContract.methods.balanceOf(address).call();
-
-              case 8:
-                tokenBalance = _context8.sent;
-                _context8.next = 21;
-                break;
-
-              case 11:
-                _context8.prev = 11;
-                _context8.t0 = _context8["catch"](5);
-                _context8.t1 = console;
-                _context8.t2 = "Error fetching token balance, are you sure the token address (addr: ".concat(tokenAddress, ") is correct for the selected network (id: ");
-                _context8.next = 17;
-                return this.web3.eth.net.getId();
-
-              case 17:
-                _context8.t3 = _context8.sent;
-                _context8.t4 = _context8.t0.message;
-                _context8.t5 = _context8.t2.concat.call(_context8.t2, _context8.t3, "))? Error: ").concat(_context8.t4);
-
-                _context8.t1.warn.call(_context8.t1, _context8.t5);
-
-              case 21:
-                if (!(balance !== '0' || tokenBalance !== '0')) {
-                  _context8.next = 32;
-                  break;
-                }
-
-                if (!_ethers.ethers.utils.bigNumberify(balance).lte(DEPOSIT_MINIMUM_WEI)) {
-                  _context8.next = 24;
-                  break;
-                }
-
-                return _context8.abrupt("return");
-
-              case 24:
-                if (!(!connextState || !connextState.runtime.canDeposit || exchangeRate === '0.00')) {
-                  _context8.next = 26;
-                  break;
-                }
-
-                return _context8.abrupt("return");
-
-              case 26:
-                actualDeposit = {
-                  amountWei: _ethers.ethers.utils.bigNumberify(balance).sub(DEPOSIT_MINIMUM_WEI).toString(),
-                  amountToken: tokenBalance
-                };
-
-                if (!(actualDeposit.amountWei === '0' && actualDeposit.amountToken === '0')) {
-                  _context8.next = 29;
-                  break;
-                }
-
-                return _context8.abrupt("return");
-
-              case 29:
-                _context8.next = 31;
-                return this.connext.deposit(actualDeposit);
-
-              case 31:
-                depositRes = _context8.sent;
-
-              case 32:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8, this, [[5, 11]]);
-      }));
-
-      function autoDeposit() {
-        return _autoDeposit.apply(this, arguments);
-      }
-
-      return autoDeposit;
-    }() // swapping wei for dai
-
-  }, {
-    key: "autoSwap",
-    value: function () {
-      var _autoSwap = (0, _asyncToGenerator2.default)(
+      var _setBrowserWalletMinimumBalance = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee9() {
-        var channelState, connextState, weiBalance, tokenBalance;
+        var web3, connextState, defaultGas, depositGasPrice, minConvertable, browserMinimumBalance;
         return _regenerator.default.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                channelState = this.channelState, connextState = this.connextState;
+                web3 = this.web3, connextState = this.connextState;
 
-                if (!(!connextState || !connextState.runtime.canExchange)) {
+                if (!(!web3 || !connextState)) {
                   _context9.next = 3;
                   break;
                 }
@@ -485,18 +403,26 @@ function () {
                 return _context9.abrupt("return");
 
               case 3:
-                weiBalance = new _bn.default(channelState.balanceWeiUser);
-                tokenBalance = new _bn.default(channelState.balanceTokenUser);
+                _context9.t0 = _bn.default;
+                _context9.next = 6;
+                return web3.eth.getGasPrice();
 
-                if (!(channelState && weiBalance.gt(_ethers.ethers.utils.bigNumberify('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING))) {
-                  _context9.next = 8;
-                  break;
-                }
+              case 6:
+                _context9.t1 = _context9.sent;
+                defaultGas = new _context9.t0(_context9.t1);
+                // default connext multiple is 1.5, leave 2x for safety
+                depositGasPrice = DEPOSIT_ESTIMATED_GAS.multipliedBy(new _bignumber.default(2)).multipliedBy(defaultGas); // add dai conversion
 
-                _context9.next = 8;
-                return this.connext.exchange(channelState.balanceWeiUser, 'wei');
+                minConvertable = new _CurrencyConvertable.default(_CurrencyTypes.CurrencyType.WEI, depositGasPrice, function () {
+                  return (0, _getExchangeRates.default)(connextState);
+                });
+                browserMinimumBalance = {
+                  wei: minConvertable.toWEI().amount,
+                  dai: minConvertable.toUSD().amount
+                };
+                this.browserMinimumBalance = browserMinimumBalance;
 
-              case 8:
+              case 12:
               case "end":
                 return _context9.stop();
             }
@@ -504,79 +430,180 @@ function () {
         }, _callee9, this);
       }));
 
+      function setBrowserWalletMinimumBalance() {
+        return _setBrowserWalletMinimumBalance.apply(this, arguments);
+      }
+
+      return setBrowserWalletMinimumBalance;
+    }() // TODO: figure out why after proposing a deposit
+    // it halts awaiting a confirm 
+
+  }, {
+    key: "autoDeposit",
+    value: function () {
+      var _autoDeposit = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee10() {
+        var address, tokenContract, connextState, tokenAddress, exchangeRate, rpcProvider, web3, browserMinimumBalance, balance, tokenBalance, minWei, channelDeposit, weiDeposit;
+        return _regenerator.default.wrap(function _callee10$(_context10) {
+          while (1) {
+            switch (_context10.prev = _context10.next) {
+              case 0:
+                address = this.address, tokenContract = this.tokenContract, connextState = this.connextState, tokenAddress = this.tokenAddress, exchangeRate = this.exchangeRate, rpcProvider = this.rpcProvider, web3 = this.web3, browserMinimumBalance = this.browserMinimumBalance;
+
+                if (!(!rpcProvider || !browserMinimumBalance)) {
+                  _context10.next = 3;
+                  break;
+                }
+
+                return _context10.abrupt("return");
+
+              case 3:
+                _context10.next = 5;
+                return web3.eth.getBalance(address);
+
+              case 5:
+                balance = _context10.sent;
+                tokenBalance = '0';
+                _context10.prev = 7;
+                _context10.next = 10;
+                return tokenContract.methods.balanceOf(address).call();
+
+              case 10:
+                tokenBalance = _context10.sent;
+                _context10.next = 23;
+                break;
+
+              case 13:
+                _context10.prev = 13;
+                _context10.t0 = _context10["catch"](7);
+                _context10.t1 = console;
+                _context10.t2 = "Error fetching token balance, are you sure the token address (addr: ".concat(tokenAddress, ") is correct for the selected network (id: ");
+                _context10.next = 19;
+                return web3.eth.net.getId();
+
+              case 19:
+                _context10.t3 = _context10.sent;
+                _context10.t4 = _context10.t0.message;
+                _context10.t5 = _context10.t2.concat.call(_context10.t2, _context10.t3, "))? Error: ").concat(_context10.t4);
+
+                _context10.t1.warn.call(_context10.t1, _context10.t5);
+
+              case 23:
+                if (!(balance !== '0' || tokenBalance !== '0')) {
+                  _context10.next = 36;
+                  break;
+                }
+
+                minWei = new _bignumber.default(browserMinimumBalance.wei); // don't autodeposit anything under the threshold
+                // update the refunding variable before returning
+
+                if (!new _bignumber.default(balance).lt(minWei)) {
+                  _context10.next = 27;
+                  break;
+                }
+
+                return _context10.abrupt("return");
+
+              case 27:
+                if (!(!connextState || !connextState.runtime.canDeposit || exchangeRate === '0.00')) {
+                  _context10.next = 29;
+                  break;
+                }
+
+                return _context10.abrupt("return");
+
+              case 29:
+                // if (!connextState || exchangeRate === '0.00') return;
+                channelDeposit = {
+                  amountWei: new _bignumber.default(new _bignumber.default(balance).minus(minWei)).toFixed(0),
+                  amountToken: tokenBalance
+                };
+
+                if (!(channelDeposit.amountWei === '0' && channelDeposit.amountToken === '0')) {
+                  _context10.next = 32;
+                  break;
+                }
+
+                return _context10.abrupt("return");
+
+              case 32:
+                // if amount to deposit into channel is over the channel max
+                // then return excess deposit to the sending account
+                // const weiToReturn = this.constructor.calculateWeiToRefund(channelDeposit.amountWei, connextState);
+                // return wei to sender
+                // if (weiToReturn !== '0') {
+                //   // await this.returnWei(weiToReturn);
+                //   return;
+                // }
+                // update channel deposit
+                // const weiDeposit = new BigNumber(channelDeposit.amountWei).minus(new BigNumber(weiToReturn)); // with refund happening... we are removing that
+                weiDeposit = new _bignumber.default(channelDeposit.amountWei);
+                channelDeposit.amountWei = weiDeposit.toFixed(0);
+                _context10.next = 36;
+                return this.connext.deposit(channelDeposit);
+
+              case 36:
+              case "end":
+                return _context10.stop();
+            }
+          }
+        }, _callee10, this, [[7, 13]]);
+      }));
+
+      function autoDeposit() {
+        return _autoDeposit.apply(this, arguments);
+      }
+
+      return autoDeposit;
+    }() // returns a BigNumber
+
+  }, {
+    key: "autoSwap",
+    // swapping wei for dai
+    value: function () {
+      var _autoSwap = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee11() {
+        var channelState, connextState, weiBalance, tokenBalance;
+        return _regenerator.default.wrap(function _callee11$(_context11) {
+          while (1) {
+            switch (_context11.prev = _context11.next) {
+              case 0:
+                channelState = this.channelState, connextState = this.connextState;
+
+                if (!(!connextState || !connextState.runtime.canExchange)) {
+                  _context11.next = 3;
+                  break;
+                }
+
+                return _context11.abrupt("return");
+
+              case 3:
+                weiBalance = new _bignumber.default(channelState.balanceWeiUser);
+                tokenBalance = new _bignumber.default(channelState.balanceTokenUser);
+
+                if (!(channelState && weiBalance.gt(new _bignumber.default('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING))) {
+                  _context11.next = 8;
+                  break;
+                }
+
+                _context11.next = 8;
+                return this.connext.exchange(channelState.balanceWeiUser, 'wei');
+
+              case 8:
+              case "end":
+                return _context11.stop();
+            }
+          }
+        }, _callee11, this);
+      }));
+
       function autoSwap() {
         return _autoSwap.apply(this, arguments);
       }
 
       return autoSwap;
-    }() // ************************************************* //
-    //                    Handlers                       //
-    // ************************************************* //
-
-  }, {
-    key: "authorizeHandler",
-    value: function () {
-      var _authorizeHandler = (0, _asyncToGenerator2.default)(
-      /*#__PURE__*/
-      _regenerator.default.mark(function _callee10() {
-        var web3, challengeRes, data, hash, signature, authRes, token, res;
-        return _regenerator.default.wrap(function _callee10$(_context10) {
-          while (1) {
-            switch (_context10.prev = _context10.next) {
-              case 0:
-                web3 = this.web3;
-                _context10.next = 3;
-                return _axios.default.post("".concat(this.hubUrl, "/auth/challenge"), {}, opts);
-
-              case 3:
-                challengeRes = _context10.sent;
-                data = "".concat(HASH_PREAMBLE, " ").concat(web3.utils.sha3(challengeRes.data.nonce), " ").concat(web3.utils.sha3('localhost'));
-                hash = web3.utils.sha3(data);
-                _context10.next = 8;
-                return web3.eth.personal.sign(hash, this.address, null);
-
-              case 8:
-                signature = _context10.sent;
-                _context10.prev = 9;
-                _context10.next = 12;
-                return _axios.default.post("".concat(this.hubUrl, "/auth/response"), {
-                  nonce: challengeRes.data.nonce,
-                  address: this.address,
-                  origin: 'localhost',
-                  signature: signature
-                }, opts);
-
-              case 12:
-                authRes = _context10.sent;
-                token = authRes.data.token;
-                document.cookie = "hub.sid=".concat(token); // console.log(`hub authentication cookie set: ${token}`);
-
-                _context10.next = 17;
-                return _axios.default.get("".concat(this.hubUrl, "/auth/status"), opts);
-
-              case 17:
-                res = _context10.sent;
-                _context10.next = 23;
-                break;
-
-              case 20:
-                _context10.prev = 20;
-                _context10.t0 = _context10["catch"](9);
-                console.log(_context10.t0);
-
-              case 23:
-              case "end":
-                return _context10.stop();
-            }
-          }
-        }, _callee10, this, [[9, 20]]);
-      }));
-
-      function authorizeHandler() {
-        return _authorizeHandler.apply(this, arguments);
-      }
-
-      return authorizeHandler;
     }() // ************************************************* //
     //                  Send Funds                       //
     // ************************************************* //
@@ -586,16 +613,16 @@ function () {
     value: function () {
       var _generateRedeemableLink = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee11(value) {
+      _regenerator.default.mark(function _callee12(value) {
         var connext, payment;
-        return _regenerator.default.wrap(function _callee11$(_context11) {
+        return _regenerator.default.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 connext = this.connext;
 
                 if (!Number.isNaN(value)) {
-                  _context11.next = 3;
+                  _context12.next = 3;
                   break;
                 }
 
@@ -618,17 +645,17 @@ function () {
                     }
                   }]
                 };
-                return _context11.abrupt("return", this.paymentHandler(payment));
+                return _context12.abrupt("return", this.paymentHandler(payment));
 
               case 5:
               case "end":
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
-      function generateRedeemableLink(_x4) {
+      function generateRedeemableLink(_x5) {
         return _generateRedeemableLink.apply(this, arguments);
       }
 
@@ -639,16 +666,16 @@ function () {
     value: function () {
       var _generatePayment = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee12(value, recipientAddress) {
+      _regenerator.default.mark(function _callee13(value, recipientAddress) {
         var connext, payment;
-        return _regenerator.default.wrap(function _callee12$(_context12) {
+        return _regenerator.default.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 connext = this.connext;
 
                 if (!Number.isNaN(value)) {
-                  _context12.next = 3;
+                  _context13.next = 3;
                   break;
                 }
 
@@ -670,17 +697,17 @@ function () {
                     }
                   }]
                 };
-                return _context12.abrupt("return", this.paymentHandler(payment));
+                return _context13.abrupt("return", this.paymentHandler(payment));
 
               case 5:
               case "end":
-                return _context12.stop();
+                return _context13.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
 
-      function generatePayment(_x5, _x6) {
+      function generatePayment(_x6, _x7) {
         return _generatePayment.apply(this, arguments);
       }
 
@@ -694,15 +721,20 @@ function () {
     value: function () {
       var _paymentHandler = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee13(payment) {
-        var connext, web3, channelState, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
-        return _regenerator.default.wrap(function _callee13$(_context13) {
+      _regenerator.default.mark(function _callee14(payment) {
+        var connext, web3, channelState, needsCollateral, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
+        return _regenerator.default.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                connext = this.connext, web3 = this.web3, channelState = this.channelState; // const { connext, web3, channelState } = this.props;
-                // console.log(`Submitting payment: ${JSON.stringify(payment, null, 2)}`);
+                connext = this.connext, web3 = this.web3, channelState = this.channelState; // check if the recipient needs collateral
+                // is utilized later in fn. Consider in a v2
 
+                _context14.next = 3;
+                return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
+
+              case 3:
+                needsCollateral = _context14.sent;
                 // validate that the token amount is within bounds
                 paymentAmount = (0, _types.convertPayment)('bn', payment.payments[0].amount);
 
@@ -724,65 +756,209 @@ function () {
 
 
                 if (!(balanceError || addressError)) {
-                  _context13.next = 9;
+                  _context14.next = 12;
                   break;
                 }
 
                 errorMessage = balanceError || addressError;
                 throw new Error(errorMessage);
 
-              case 9:
-                _context13.prev = 9;
-                _context13.next = 12;
+              case 12:
+                _context14.prev = 12;
+                _context14.next = 15;
                 return connext.buy(payment);
 
-              case 12:
-                paymentRes = _context13.sent;
+              case 15:
+                paymentRes = _context14.sent;
 
                 if (!(payment.payments[0].type === 'PT_LINK')) {
-                  _context13.next = 15;
+                  _context14.next = 18;
                   break;
                 }
 
-                return _context13.abrupt("return", payment.payments[0].secret);
-
-              case 15:
-                return _context13.abrupt("return", true);
+                return _context14.abrupt("return", payment.payments[0].secret);
 
               case 18:
-                _context13.prev = 18;
-                _context13.t0 = _context13["catch"](9);
-                throw new Error(_context13.t0);
+                return _context14.abrupt("return", true);
 
               case 21:
+                _context14.prev = 21;
+                _context14.t0 = _context14["catch"](12);
+                throw new Error(_context14.t0);
+
+              case 24:
               case "end":
-                return _context13.stop();
+                return _context14.stop();
             }
           }
-        }, _callee13, this, [[9, 18]]);
+        }, _callee14, this, [[12, 21]]);
       }));
 
-      function paymentHandler(_x7) {
+      function paymentHandler(_x8) {
         return _paymentHandler.apply(this, arguments);
       }
 
       return paymentHandler;
     }()
   }, {
+    key: "collateralizeRecipient",
+    value: function () {
+      var _collateralizeRecipient = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee16(payment) {
+        var connext, success, needsCollateral;
+        return _regenerator.default.wrap(function _callee16$(_context16) {
+          while (1) {
+            switch (_context16.prev = _context16.next) {
+              case 0:
+                connext = this.connext; // do not collateralize on pt link payments
+
+                if (!(payment.payments[0].type === 'PT_LINK')) {
+                  _context16.next = 3;
+                  break;
+                }
+
+                return _context16.abrupt("return");
+
+              case 3:
+                _context16.next = 5;
+                return connext.buy(payment);
+
+              case 5:
+                success = _context16.sent;
+
+                if (!success) {
+                  _context16.next = 8;
+                  break;
+                }
+
+                return _context16.abrupt("return");
+
+              case 8:
+                _context16.next = 10;
+                return setInterval(
+                /*#__PURE__*/
+                function () {
+                  var _ref3 = (0, _asyncToGenerator2.default)(
+                  /*#__PURE__*/
+                  _regenerator.default.mark(function _callee15(iteration, stop) {
+                    return _regenerator.default.wrap(function _callee15$(_context15) {
+                      while (1) {
+                        switch (_context15.prev = _context15.next) {
+                          case 0:
+                            _context15.next = 2;
+                            return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
+
+                          case 2:
+                            needsCollateral = _context15.sent;
+
+                            if (!needsCollateral || iteration > 20) {
+                              stop();
+                            }
+
+                          case 4:
+                          case "end":
+                            return _context15.stop();
+                        }
+                      }
+                    }, _callee15);
+                  }));
+
+                  return function (_x10, _x11) {
+                    return _ref3.apply(this, arguments);
+                  };
+                }(), 5000, {
+                  iterations: 20
+                });
+
+              case 10:
+                if (!needsCollateral) {
+                  _context16.next = 13;
+                  break;
+                }
+
+                this.setState({
+                  showReceipt: true,
+                  paymentState: PaymentStates.CollateralTimeout
+                });
+                return _context16.abrupt("return", CollateralStates.Timeout);
+
+              case 13:
+                return _context16.abrupt("return", CollateralStates.Success);
+
+              case 14:
+              case "end":
+                return _context16.stop();
+            }
+          }
+        }, _callee16, this);
+      }));
+
+      function collateralizeRecipient(_x9) {
+        return _collateralizeRecipient.apply(this, arguments);
+      }
+
+      return collateralizeRecipient;
+    }() // not utilized yet
+
+  }, {
+    key: "tryToCollateralize",
+    value: function tryToCollateralize(payment) {
+      var connext = this.connext;
+      var iteration = 0;
+      return new Promise(function (res, rej) {
+        var collateralizeInterval = setInterval(
+        /*#__PURE__*/
+        (0, _asyncToGenerator2.default)(
+        /*#__PURE__*/
+        _regenerator.default.mark(function _callee17() {
+          var needsCollateral;
+          return _regenerator.default.wrap(function _callee17$(_context17) {
+            while (1) {
+              switch (_context17.prev = _context17.next) {
+                case 0:
+                  console.log('interval', iteration);
+                  _context17.next = 3;
+                  return connext.recipientNeedsCollateral(payment.payments[0].recipient, (0, _types.convertPayment)('str', payment.payments[0].amount));
+
+                case 3:
+                  needsCollateral = _context17.sent;
+
+                  if (!needsCollateral) {
+                    console.log('successfulyl collateralized');
+                    res(true);
+                    clearInterval(collateralizeInterval);
+                  } else if (iteration >= 20) {
+                    rej(new Error('Unable to collateralize'));
+                    clearInterval(collateralizeInterval);
+                  }
+
+                  iteration += 1;
+
+                case 6:
+                case "end":
+                  return _context17.stop();
+              }
+            }
+          }, _callee17);
+        })), 5000);
+      });
+    }
+  }, {
     key: "redeemPayment",
     value: function () {
       var _redeemPayment = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee14(secret) {
+      _regenerator.default.mark(function _callee18(secret) {
         var connext, channelState, connextState;
-        return _regenerator.default.wrap(function _callee14$(_context14) {
+        return _regenerator.default.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
                 connext = this.connext, channelState = this.channelState, connextState = this.connextState;
 
                 if (!(!connext || !channelState || !connextState)) {
-                  _context14.next = 3;
+                  _context18.next = 3;
                   break;
                 }
 
@@ -790,30 +966,30 @@ function () {
 
               case 3:
                 if (secret) {
-                  _context14.next = 5;
+                  _context18.next = 5;
                   break;
                 }
 
                 throw new Error('No secret detected, cannot redeem payment.');
 
               case 5:
-                _context14.prev = 5;
-                return _context14.abrupt("return", connext.redeem(secret));
+                _context18.prev = 5;
+                return _context18.abrupt("return", connext.redeem(secret));
 
               case 9:
-                _context14.prev = 9;
-                _context14.t0 = _context14["catch"](5);
-                throw new Error(_context14.t0);
+                _context18.prev = 9;
+                _context18.t0 = _context18["catch"](5);
+                throw new Error(_context18.t0);
 
               case 12:
               case "end":
-                return _context14.stop();
+                return _context18.stop();
             }
           }
-        }, _callee14, this, [[5, 9]]);
+        }, _callee18, this, [[5, 9]]);
       }));
 
-      function redeemPayment(_x8) {
+      function redeemPayment(_x12) {
         return _redeemPayment.apply(this, arguments);
       }
 
@@ -830,6 +1006,19 @@ function () {
       var cents = substr[1].substring(0, 2);
       if (cents.length === 1) cents = "".concat(cents, "0");
       return "".concat(substr[0], ".").concat(cents);
+    }
+  }], [{
+    key: "calculateWeiToRefund",
+    value: function calculateWeiToRefund(wei, connextState) {
+      // channel max tokens is minimum of the ceiling that
+      // the hub would exchange, or a set deposit max
+      var ceilingWei = new _CurrencyConvertable.default(_CurrencyTypes.CurrencyType.BEI, _bignumber.default.min(HUB_EXCHANGE_CEILING, CHANNEL_DEPOSIT_MAX), function () {
+        return (0, _getExchangeRates.default)(connextState);
+      }).toWEI().amountBigNumber;
+
+      var weiToRefund = _bignumber.default.max(new _bn.default(wei).minus(ceilingWei), new _bn.default(0));
+
+      return weiToRefund.toFixed(0);
     }
   }]);
   return Card;

@@ -6,9 +6,10 @@ import { Buffer } from 'buffer';
 
 export default class ProviderOptions {
 
-  constructor(wallet, rpcUrl) {
+  constructor(wallet, rpcUrl, hubUrl) {
     this.wallet = wallet;
     this.rpcUrl = rpcUrl;
+    this.hubUrl = hubUrl;
   }
 
   getAccounts(callback) {

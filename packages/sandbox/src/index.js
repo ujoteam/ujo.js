@@ -10,10 +10,20 @@ const main = async () => {
   document.body.appendChild(h5);
 
   const card = new Card(amount => {
-    h1.innerHTML = amount;
+    h1.innerHTML = `$${card.convertDaiToUSDString(amount)}`;
   });
 
+  // TODO: implement a `.env` in the card, or somewhere, that inserts the
+  // following values depending on the eth network being used
+  // rinkeby
+  // const address = await card.init("https://daicard.io/api/rinkeby/hub", "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w");
+
+  // // mainnet
+  // const address = await card.init("https://daicard.io/api/mainnet/hub", "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-");
+
+  // local development
   const address = await card.init();
+
   h5.innerHTML = address;
 
   document.body.appendChild(document.createElement('hr'));
@@ -55,8 +65,6 @@ const main = async () => {
   const button1 = document.createElement('button');
   button1.innerHTML = 'Redeem From Secret';
   button1.onclick = (e) => {
-    console.log('input value', inputSecret);
-    console.log('inputSecret value', inputSecret.value);
     card.redeemPayment(inputSecret.value);
   };
   document.body.appendChild(inputSecret);

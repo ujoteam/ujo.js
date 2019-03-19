@@ -27,7 +27,6 @@ var _bignumber = require("bignumber.js");
 
 var _request = _interopRequireDefault(require("./request"));
 
-var hubUrl = process.env.REACT_APP_HUB_URL;
 var GWEI = new _bignumber.BigNumber('1e9');
 var MAX_PRICE = GWEI.times(50); // interface Transaction {
 //   gasPrice: string
@@ -38,9 +37,13 @@ var GaspriceSubprovider =
 function (_Subprovider) {
   (0, _inherits2.default)(GaspriceSubprovider, _Subprovider);
 
-  function GaspriceSubprovider() {
+  function GaspriceSubprovider(hubUrl) {
+    var _this;
+
     (0, _classCallCheck2.default)(this, GaspriceSubprovider);
-    return (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(GaspriceSubprovider).apply(this, arguments));
+    _this = (0, _possibleConstructorReturn2.default)(this, (0, _getPrototypeOf2.default)(GaspriceSubprovider).call(this));
+    _this.hubUrl = hubUrl;
+    return _this;
   }
 
   (0, _createClass2.default)(GaspriceSubprovider, [{
@@ -49,7 +52,7 @@ function (_Subprovider) {
       var _handleRequest = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee(payload, next, end) {
-        var _this = this;
+        var _this2 = this;
 
         var gas;
         return _regenerator.default.wrap(function _callee$(_context) {
@@ -69,7 +72,7 @@ function (_Subprovider) {
                   console.warn('Error fetching gas price from the hub (falling back to Web3):', err);
                   return null;
                 }).then(function (gasPrice) {
-                  if (!gasPrice) return _this.estimateGasPriceFromPreviousBlocks();
+                  if (!gasPrice) return _this2.estimateGasPriceFromPreviousBlocks();
                   return gasPrice;
                 }).then(function (gasPrice) {
                   return end(null, "0x".concat(gasPrice.toString(16)));
@@ -103,7 +106,7 @@ function (_Subprovider) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 _context2.next = 2;
-                return (0, _request.default)("".concat(hubUrl, "/gasPrice/estimate"));
+                return (0, _request.default)("".concat(this.hubUrl, "/gasPrice/estimate"));
 
               case 2:
                 res = _context2.sent;
@@ -123,7 +126,7 @@ function (_Subprovider) {
                 return _context2.stop();
             }
           }
-        }, _callee2);
+        }, _callee2, this);
       }));
 
       function estimateGasPriceFromHub() {
@@ -135,10 +138,10 @@ function (_Subprovider) {
   }, {
     key: "estimateGasPriceFromPreviousBlocks",
     value: function estimateGasPriceFromPreviousBlocks() {
-      var _this2 = this;
+      var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this2.emitPayload({
+        _this3.emitPayload({
           method: 'eth_blockNumber'
         }, function (err, res) {
           var lastBlock = new _bignumber.BigNumber(res.result);
@@ -150,10 +153,10 @@ function (_Subprovider) {
           }
 
           var gets = blockNums.map(function (item) {
-            return _this2.getBlock(item);
+            return _this3.getBlock(item);
           });
           Promise.all(gets).then(function (blocks) {
-            resolve(_bignumber.BigNumber.min(_this2.meanGasPrice(blocks), MAX_PRICE));
+            resolve(_bignumber.BigNumber.min(_this3.meanGasPrice(blocks), MAX_PRICE));
           }).catch(reject);
         });
       });
@@ -161,10 +164,10 @@ function (_Subprovider) {
   }, {
     key: "getBlock",
     value: function getBlock(item) {
-      var _this3 = this;
+      var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        return _this3.emitPayload({
+        return _this4.emitPayload({
           method: 'eth_getBlockByNumber',
           params: [item, true]
         }, function (err, res) {
@@ -177,6 +180,8 @@ function (_Subprovider) {
   }, {
     key: "meanGasPrice",
     value: function meanGasPrice(blocks) {
+      var that = this; // eslint-disable-line
+
       var sum = new _bignumber.BigNumber(0);
       var count = 0;
 
