@@ -1,6 +1,6 @@
 {
   "name": "@ujoteam/badges",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "main": "dist/index.js",
   "scripts": {
     "build": "./node_modules/.bin/babel src -d dist -s",
