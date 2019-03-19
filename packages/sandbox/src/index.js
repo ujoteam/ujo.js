@@ -15,11 +15,18 @@ const main = async () => {
 
   // TODO: implement a `.env` in the card, or somewhere, that inserts the
   // following values depending on the eth network being used
-  // rinkeby
+  // // rinkeby
   // const address = await card.init("https://daicard.io/api/rinkeby/hub", "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w");
 
   // // mainnet
   // const address = await card.init("https://daicard.io/api/mainnet/hub", "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-");
+
+  // // docker local
+  // 1. add the following rpc url to metamask as a custom RPC: 
+  // http://localhost:3000/api/eth
+  // 2. add this private key for eth: 
+  // 659CBB0E2411A44DB63778987B1E22153C086A95EB6B18BDF89DE078917ABC63
+  // const address = await card.init("http://localhost:3000/api/hub", "http://localhost:3000/api/eth");
 
   // local development
   const address = await card.init();
