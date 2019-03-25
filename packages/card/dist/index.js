@@ -640,7 +640,7 @@ function () {
                     recipient: _Utils.emptyAddress,
                     secret: connext.generateSecret(),
                     amount: {
-                      amountToken: (value * Math.pow(10, 18)).toString(),
+                      amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
                       amountWei: '0'
                     }
                   }]

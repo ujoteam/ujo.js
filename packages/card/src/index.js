@@ -185,7 +185,7 @@ class Card {
     } catch (e) {
       console.warn(
         `Error fetching token balance, are you sure the token address (addr: ${tokenAddress}) is correct for the selected network (id: ${await web3.eth.net.getId()}))? Error: ${
-          e.message
+        e.message
         }`
       );
     }
@@ -271,7 +271,7 @@ class Card {
           recipient: emptyAddress,
           secret: connext.generateSecret(),
           amount: {
-            amountToken: (value * Math.pow(10, 18)).toString(),
+            amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
             amountWei: '0',
           },
         }
