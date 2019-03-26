@@ -355,7 +355,7 @@ class Card {
       let paymentRes = await connext.buy(payment);
       // console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
       if (payment.payments[0].type === 'PT_LINK') {
-        return payment.payments[0].secret;
+        return payment.payments[0].meta.secret;
       }
       return true;
     } catch (e) {
