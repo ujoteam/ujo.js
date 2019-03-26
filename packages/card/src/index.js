@@ -287,7 +287,7 @@ class Card {
 
     // generate secret, set type, and set
     const payment = {
-      meta: { purchaseId: 'payment' },
+      meta: { purchaseId: 'payment' }, // NOTE: put 'ujo' or something here, and well be able to easily determine which purchases came from you guys down the line for metrics on your platform
       payments: [
         {
           type: 'PT_CHANNEL',
