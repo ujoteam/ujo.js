@@ -292,7 +292,6 @@ class Card {
         {
           type: 'PT_CHANNEL',
           recipient: recipientAddress,
-          secret: connext.generateSecret(),
           amount: {
             amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
             amountWei: '0',
