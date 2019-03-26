@@ -264,16 +264,16 @@ class Card {
     // generate secret, set type, and set
     // recipient to empty address
     const payment = {
-      meta: { purchaseId: 'payment' },
+      meta: { purchaseId: 'ujo' },
       payments: [
         {
           type: 'PT_LINK',
           recipient: emptyAddress,
-          secret: connext.generateSecret(),
           amount: {
             amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
             amountWei: '0',
           },
+          meta: { secret: connext.generateSecret() },
         }
       ],
     };
@@ -287,12 +287,12 @@ class Card {
 
     // generate secret, set type, and set
     const payment = {
-      meta: { purchaseId: 'payment' },
+      meta: { purchaseId: 'ujo' },
       payments: [
         {
           type: 'PT_CHANNEL',
           recipient: recipientAddress,
-          secret: connext.generateSecret(),
+          // secret: connext.generateSecret(),
           amount: {
             amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
             amountWei: '0',
@@ -356,7 +356,7 @@ class Card {
       let paymentRes = await connext.buy(payment);
       // console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
       if (payment.payments[0].type === 'PT_LINK') {
-        return payment.payments[0].secret;
+        return payment.payments[0].meta.secret;
       }
       return true;
     } catch (e) {

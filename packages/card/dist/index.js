@@ -633,15 +633,17 @@ function () {
                 // recipient to empty address
                 payment = {
                   meta: {
-                    purchaseId: 'payment'
+                    purchaseId: 'ujo'
                   },
                   payments: [{
                     type: 'PT_LINK',
                     recipient: _Utils.emptyAddress,
-                    secret: connext.generateSecret(),
                     amount: {
                       amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
                       amountWei: '0'
+                    },
+                    meta: {
+                      secret: connext.generateSecret()
                     }
                   }]
                 };
@@ -685,12 +687,12 @@ function () {
                 // generate secret, set type, and set
                 payment = {
                   meta: {
-                    purchaseId: 'payment'
+                    purchaseId: 'ujo'
                   },
                   payments: [{
                     type: 'PT_CHANNEL',
                     recipient: recipientAddress,
-                    secret: connext.generateSecret(),
+                    // secret: connext.generateSecret(),
                     amount: {
                       amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
                       amountWei: '0'
@@ -776,7 +778,7 @@ function () {
                   break;
                 }
 
-                return _context14.abrupt("return", payment.payments[0].secret);
+                return _context14.abrupt("return", payment.payments[0].meta.secret);
 
               case 18:
                 return _context14.abrupt("return", true);
