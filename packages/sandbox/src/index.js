@@ -1,5 +1,17 @@
 import Card from '../../card/src/index';
 
+// // local
+// const CONNEXT_HUB_URL = null;
+// const CONNEXT_RPC_URL = null;
+
+// rinkeby
+const CONNEXT_HUB_URL = "https://daicard.io/api/rinkeby/hub";
+const CONNEXT_RPC_URL = "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w";
+
+// // mainnet
+// const CONNEXT_HUB_URL = "https://daicard.io/api/mainnet/hub";
+// const CONNEXT_RPC_URL = "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-";
+
 const main = async () => {
   const h1 = document.createElement('h1');
   h1.innerHTML = '$0.00';
@@ -9,17 +21,16 @@ const main = async () => {
   h5.innerHTML = '????????????????';
   document.body.appendChild(h5);
 
-  const card = new Card(amount => {
-    h1.innerHTML = `$${card.convertDaiToUSDString(amount)}`;
+  // const onStateUpdate = amount => {
+  //   h1.innerHTML = `$${Card.convertDaiToUSDString(amount)}`;
+  // };
+
+  const card = new Card({
+    hubUrl: CONNEXT_HUB_URL,
+    rpcProvider: CONNEXT_RPC_URL,
+    onStateUpdate: amnt => { h1.innerHTML = `$${card.convertDaiToUSDString(amnt)}`},
+    domain: 'localhost',
   });
-
-  // TODO: implement a `.env` in the card, or somewhere, that inserts the
-  // following values depending on the eth network being used
-  // rinkeby
-  // const address = await card.init("https://daicard.io/api/rinkeby/hub", "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w");
-
-  // // mainnet
-  // const address = await card.init("https://daicard.io/api/mainnet/hub", "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-");
 
   // local development
   const address = await card.init();
