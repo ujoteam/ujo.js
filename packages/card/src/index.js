@@ -369,7 +369,6 @@ class Card {
     }
   }
 
-
   async collateralizeRecipient(payment) {
     const { connext } = this;
     // do not collateralize on pt link payments
@@ -447,6 +446,64 @@ class Card {
     } catch (e) {
       throw new Error(e);
     }
+  }
+
+
+  // ************************************************* //
+  //                 Withdraw Funds                    //
+  // ************************************************* //
+  async withdrawalAllFunds(recipient, withdrawEth) {
+    const { connext, web3 } = this;
+    const withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
+
+    // check for valid address
+    // let addressError = null
+    // let balanceError = null
+    if (!web3.utils.isAddress(recipient)) {
+      throw new Error(`${withdrawalVal.recipient} is not a valid address`);
+    }
+
+    // TODO: check the input balance is under channel balance
+    // TODO: allow partial withdrawals?
+
+    console.log(`Withdrawing: ${JSON.stringify(withdrawalVal, null, 2)}`);
+    await connext.withdraw(withdrawalVal);
+    // this.poller();
+  }
+
+  createWithdrawValues(recipient, withdrawEth) {
+    // set the state to contain the proper withdrawal args for
+    // eth or dai withdrawal
+    const { channelState, exchangeRate } = this;
+    let withdrawalVal = {
+      recipient,
+      exchangeRate,
+      tokensToSell: '0',
+      withdrawalWeiUser: '0',
+      weiToSell: '0',
+      withdrawalTokenUser: '0',
+    };
+    if (withdrawEth) {
+      // withdraw all channel balance in eth
+      withdrawalVal = {
+        ...withdrawalVal,
+        tokensToSell: channelState.balanceTokenUser,
+        withdrawalWeiUser: channelState.balanceWeiUser,
+        weiToSell: '0',
+        withdrawalTokenUser: '0',
+      };
+    } else {
+      // handle withdrawing all channel balance in dai
+      withdrawalVal = {
+        ...withdrawalVal,
+        tokensToSell: '0',
+        withdrawalWeiUser: '0',
+        weiToSell: channelState.balanceWeiUser,
+        withdrawalTokenUser: channelState.balanceTokenUser,
+      };
+    }
+
+    return withdrawalVal;
   }
 
   // ************************************************* //
