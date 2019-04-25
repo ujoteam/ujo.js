@@ -452,7 +452,7 @@ class Card {
   // ************************************************* //
   //                 Withdraw Funds                    //
   // ************************************************* //
-  async withdrawalAllFunds(recipient, withdrawEth) {
+  async withdrawalAllFunds(recipient, withdrawEth = true) {
     const { connext, web3 } = this;
     const withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
 

@@ -46,20 +46,36 @@ yarn add @ujoteam/card
 
 You will need to point to a hub in order to utilize the state channel functionality. Connext currently hosts hubs for both the Rinkeby and Ethereum Mainnet. If you would like to run your own node, check out [their docs for indra](https://github.com/ConnextProject/indra).
 
-First instantiate a new Card and can optionally pass in a callback function which will be called every time the state of the address is updated. State is updated by sending, receiving, depositing, or withdrawing funds. The only argument currently passed to the callback is the amount denominated in wei. A helper function is provided to convert to USD: `card.convertDaiToUSDString`.
+First create a new Card by passing in an object with the properties seen in the javascript below. The `onStateUpdate` function is a callback which will be called every time the state of the address is updated. State is updated by sending, receiving, depositing, or withdrawing funds. The only argument currently passed to the callback is the amount denominated in wei. A helper function is provided to convert to USD: `convertDaiToUSDString`.
 
 ```js
-const card = new Card(callbackFunction);
+const card = new Card({
+  hubUrl: 'https://...',
+  rpcProvider: 'https://...',
+  onStateUpdate: amnt => { console.log(`$${card.convertDaiToUSDString(amnt)}`)},
+  domain: 'localhost [for connext debugging purposes]',
+});
 ```
 
-Then initialize the card by passing in the hubUrl and jsonRpc provider. If running indra locally, you can leave these values blank as the default values will point to the local hub running on port 8080 and the rpc provider on 8545.
+Initializing the card with require a `hubUrl` and json `rpcProvider`. If running indra locally, you can leave these values blank or remove them from the object as the default values will point to the local hub running on port 8080 and the rpc provider on 8545. Otherwise, options for rinkeby and mainnet are respectively:
 
 ```js
 // rinkeby
-const address = await card.init("https://daicard.io/api/rinkeby/hub", "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w");
+const CONNEXT_HUB_URL = "https://daicard.io/api/rinkeby/hub";
+const CONNEXT_RPC_URL = "https://eth-rinkeby.alchemyapi.io/jsonrpc/SU-VoQIQnzxwTrccH4tfjrQRTCrNiX6w";
+
 // mainnet
-const address = await card.init("https://daicard.io/api/mainnet/hub", "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-");
+const CONNEXT_HUB_URL = "https://daicard.io/api/mainnet/hub";
+const CONNEXT_RPC_URL = "https://eth-mainnet.alchemyapi.io/jsonrpc/rHT6GXtmGtMxV66Bvv8aXLOUc6lp0m_-";
 ```
+
+Then 
+
+```js
+const address = await card.init(mnemonicCanGoHere);
+```
+
+If an mnemonic is not passed in to the init function, one will be generated for you. However, it will first check if any mnemonic had previously been stored in localStorage first.
 
 **Important**
 Upon initialization, a mnemonic will be generated and stored in localStorage keyed at `localStorage.get('mnemonic')`. For this reason you should warn your users to avoid resetting localStorage as it will result in the disappearance of the mnemonic and therefore a generation of a new seed phrase and wallet next time the Card is initialized.
@@ -76,8 +92,10 @@ Once funds have appeared in your wallet, there are three main activites to perfo
   - `const linkToClaim = await card.generateRedeemableLink(valueAsNumberToSendInUSD)`
 - Claim via Link
   - `card.redeemPayment(linkToClaim)`
+- Withdraw funds
+  - `card.withdrawalAllFunds(walletAddressAsString)`
 
-For a stripped down UI to begin, check out the Sandbox package found in this mono-repo `ujo.js/packages/sandbox`. For a quick start, point the hub and rpc to the rinkeby provider by uncommenting line 19 and commenting out the local pointer on line 25.
+For a stripped down UI to begin, check out the Sandbox package found in this mono-repo `ujo.js/packages/sandbox`.
 
 ## Contributing
 

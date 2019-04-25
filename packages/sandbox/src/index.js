@@ -21,10 +21,6 @@ const main = async () => {
   h5.innerHTML = '????????????????';
   document.body.appendChild(h5);
 
-  // const onStateUpdate = amount => {
-  //   h1.innerHTML = `$${Card.convertDaiToUSDString(amount)}`;
-  // };
-
   const card = new Card({
     hubUrl: CONNEXT_HUB_URL,
     rpcProvider: CONNEXT_RPC_URL,
@@ -80,6 +76,19 @@ const main = async () => {
   };
   document.body.appendChild(inputSecret);
   document.body.appendChild(button1);
+
+  document.body.appendChild(document.createElement('hr'));
+
+  // input and button to claim redeem link
+  const inputWithdrawAddress = document.createElement('input');
+  inputWithdrawAddress.placeholder = 'Address To Withdraw To';
+  const buttonWith = document.createElement('button');
+  buttonWith.innerHTML = 'Withdraw';
+  buttonWith.onclick = (e) => {
+    card.withdrawalAllFunds(inputWithdrawAddress.value);
+  };
+  document.body.appendChild(inputWithdrawAddress);
+  document.body.appendChild(buttonWith);
 }
 
 main();
