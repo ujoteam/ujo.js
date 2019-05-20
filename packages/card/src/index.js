@@ -17,15 +17,23 @@ import createWallet from './walletGen';
 import tokenAbi from './abi/humanToken.json';
 
 // set constants
-const DEPOSIT_ESTIMATED_GAS = new BigNumber('700000') // 700k gas
+const DEPOSIT_ESTIMATED_GAS = new BigNumber('700000'); // 700k gas
 const HUB_EXCHANGE_CEILING = new BigNumber(Web3.utils.toWei('69', 'ether')); // 69 TST
 const CHANNEL_DEPOSIT_MAX = new BigNumber(Web3.utils.toWei('30', 'ether')); // 30 TST=
 
+const constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
+
 // define class
 class Card {
-  constructor(cb) {
-    // remove from a 'state'
-    // object and list under `this`
+  constructor(opts) {
+    if (typeof opts !== 'object') throw new Error(constructorError);
+
+    // passed in options
+    this.onStateUpdate = opts.onStateUpdate ? opts.onStateUpdate : () => {};
+    this.hubUrl = opts.hubUrl ? opts.hubUrl : 'http://localhost:8080';
+    this.rpcProvider = opts.rpcProvider ? opts.rpcProvider : 'http://localhost:8545';
+    this.domain = opts.domain ? opts.domain : 'localhost'; // might not need
+
     this.address = '';
     this.web3 = {};
     this.connext = {};
@@ -33,26 +41,22 @@ class Card {
     this.tokenContract = null;
     this.channelState = null;
     this.connextState = null;
-    this.stateUpdateCallback = cb;
     this.exchangeRate = '0.00';
-    this.hubUrl = null;
-    this.rpcProvider = null;
   }
 
   // TODO: take in mnemonic so that users can
   // generate wallet from another dapplication
-  async init(hubUrl = 'http://localhost:8080', rpcProvider = 'http://localhost:8545') {
-    // Set up wallet
-    const mnemonic = localStorage.getItem('mnemonic');
+  async init(existingMnemonic) {
+    // check if mnemonic exists in LS
+    const mnemonic = existingMnemonic || localStorage.getItem('mnemonic');
+    // otherwise generate wallet in create wallet
     const delegateSigner = await createWallet(mnemonic);
     const address = await delegateSigner.getAddressString();
     this.address = address;
-    this.hubUrl = hubUrl;
-    this.rpcProvider = rpcProvider;
 
     // set up web3 and connext
-    await this.setWeb3(delegateSigner, rpcProvider, hubUrl);
-    await this.setConnext(hubUrl);
+    await this.setWeb3(delegateSigner);
+    await this.setConnext();
     await this.setTokenContract();
 
     // start polling for state
@@ -67,19 +71,19 @@ class Card {
   // ************************************************* //
   //                State setters                      //
   // ************************************************* //
-  async setWeb3(address, rpcUrl, hubUrl) {
-    const providerOpts = new ProviderOptions(address, rpcUrl, hubUrl).approving();
+  async setWeb3(delegateSigner) {
+    const providerOpts = new ProviderOptions(delegateSigner, this.rpcProvider, this.hubUrl).approving();
     const provider = clientProvider(providerOpts);
     const customWeb3 = new Web3(provider);
     this.web3 = customWeb3;
   }
 
-  async setConnext(hubUrl) {
+  async setConnext() {
     const options = {
       web3: this.web3,
-      hubUrl,
+      hubUrl: this.hubUrl,
       user: this.address,
-      origin: 'localhost',
+      origin: this.domain,
     };
 
     // *** Instantiate the connext client ***
@@ -109,11 +113,10 @@ class Card {
     const that = this;
     // register listeners
     this.connext.on('onStateChange', state => {
-      // console.log('STATE cHANEGE', state)
       if (state.persistent.channel) {
         const balance = state.persistent.channel.balanceTokenUser;
         // balance is in Dai, return via callback so app/service can process usd amount
-        that.stateUpdateCallback(balance);
+        that.onStateUpdate(balance);
       }
 
       that.channelState = state.persistent.channel;
@@ -301,7 +304,9 @@ class Card {
       ],
     };
 
-    return this.paymentHandler(payment);
+    const act = await this.paymentHandler(payment);
+    console.log('act', act);
+    return act;
   }
 
   // returns true on a successful payment to address
@@ -363,7 +368,6 @@ class Card {
       throw new Error(e);
     }
   }
-
 
   async collateralizeRecipient(payment) {
     const { connext } = this;
@@ -442,6 +446,64 @@ class Card {
     } catch (e) {
       throw new Error(e);
     }
+  }
+
+
+  // ************************************************* //
+  //                 Withdraw Funds                    //
+  // ************************************************* //
+  async withdrawalAllFunds(recipient, withdrawEth = true) {
+    const { connext, web3 } = this;
+    const withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
+
+    // check for valid address
+    // let addressError = null
+    // let balanceError = null
+    if (!web3.utils.isAddress(recipient)) {
+      throw new Error(`${withdrawalVal.recipient} is not a valid address`);
+    }
+
+    // TODO: check the input balance is under channel balance
+    // TODO: allow partial withdrawals?
+
+    console.log(`Withdrawing: ${JSON.stringify(withdrawalVal, null, 2)}`);
+    await connext.withdraw(withdrawalVal);
+    // this.poller();
+  }
+
+  createWithdrawValues(recipient, withdrawEth) {
+    // set the state to contain the proper withdrawal args for
+    // eth or dai withdrawal
+    const { channelState, exchangeRate } = this;
+    let withdrawalVal = {
+      recipient,
+      exchangeRate,
+      tokensToSell: '0',
+      withdrawalWeiUser: '0',
+      weiToSell: '0',
+      withdrawalTokenUser: '0',
+    };
+    if (withdrawEth) {
+      // withdraw all channel balance in eth
+      withdrawalVal = {
+        ...withdrawalVal,
+        tokensToSell: channelState.balanceTokenUser,
+        withdrawalWeiUser: channelState.balanceWeiUser,
+        weiToSell: '0',
+        withdrawalTokenUser: '0',
+      };
+    } else {
+      // handle withdrawing all channel balance in dai
+      withdrawalVal = {
+        ...withdrawalVal,
+        tokensToSell: '0',
+        withdrawalWeiUser: '0',
+        weiToSell: channelState.balanceWeiUser,
+        withdrawalTokenUser: channelState.balanceTokenUser,
+      };
+    }
+
+    return withdrawalVal;
   }
 
   // ************************************************* //

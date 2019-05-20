@@ -7,9 +7,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+var _objectSpread2 = _interopRequireDefault(require("@babel/runtime/helpers/objectSpread"));
+
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
+
+var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
 
 var _classCallCheck2 = _interopRequireDefault(require("@babel/runtime/helpers/classCallCheck"));
 
@@ -51,15 +55,21 @@ var DEPOSIT_ESTIMATED_GAS = new _bignumber.default('700000'); // 700k gas
 var HUB_EXCHANGE_CEILING = new _bignumber.default(_web.default.utils.toWei('69', 'ether')); // 69 TST
 
 var CHANNEL_DEPOSIT_MAX = new _bignumber.default(_web.default.utils.toWei('30', 'ether')); // 30 TST=
-// define class
+
+var constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.'; // define class
 
 var Card =
 /*#__PURE__*/
 function () {
-  function Card(cb) {
+  function Card(opts) {
     (0, _classCallCheck2.default)(this, Card);
-    // remove from a 'state'
-    // object and list under `this`
+    if ((0, _typeof2.default)(opts) !== 'object') throw new Error(constructorError); // passed in options
+
+    this.onStateUpdate = opts.onStateUpdate ? opts.onStateUpdate : function () {};
+    this.hubUrl = opts.hubUrl ? opts.hubUrl : 'http://localhost:8080';
+    this.rpcProvider = opts.rpcProvider ? opts.rpcProvider : 'http://localhost:8545';
+    this.domain = opts.domain ? opts.domain : 'localhost'; // might not need
+
     this.address = '';
     this.web3 = {};
     this.connext = {};
@@ -67,10 +77,7 @@ function () {
     this.tokenContract = null;
     this.channelState = null;
     this.connextState = null;
-    this.stateUpdateCallback = cb;
     this.exchangeRate = '0.00';
-    this.hubUrl = null;
-    this.rpcProvider = null;
   } // TODO: take in mnemonic so that users can
   // generate wallet from another dapplication
 
@@ -80,62 +87,54 @@ function () {
     value: function () {
       var _init = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee() {
-        var hubUrl,
-            rpcProvider,
-            mnemonic,
-            delegateSigner,
-            address,
-            _args = arguments;
+      _regenerator.default.mark(function _callee(existingMnemonic) {
+        var mnemonic, delegateSigner, address;
         return _regenerator.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                hubUrl = _args.length > 0 && _args[0] !== undefined ? _args[0] : 'http://localhost:8080';
-                rpcProvider = _args.length > 1 && _args[1] !== undefined ? _args[1] : 'http://localhost:8545';
-                // Set up wallet
-                mnemonic = localStorage.getItem('mnemonic');
-                _context.next = 5;
+                // check if mnemonic exists in LS
+                mnemonic = existingMnemonic || localStorage.getItem('mnemonic'); // otherwise generate wallet in create wallet
+
+                _context.next = 3;
                 return (0, _walletGen.default)(mnemonic);
 
-              case 5:
+              case 3:
                 delegateSigner = _context.sent;
-                _context.next = 8;
+                _context.next = 6;
                 return delegateSigner.getAddressString();
 
-              case 8:
+              case 6:
                 address = _context.sent;
-                this.address = address;
-                this.hubUrl = hubUrl;
-                this.rpcProvider = rpcProvider; // set up web3 and connext
+                this.address = address; // set up web3 and connext
 
+                _context.next = 10;
+                return this.setWeb3(delegateSigner);
+
+              case 10:
+                _context.next = 12;
+                return this.setConnext();
+
+              case 12:
                 _context.next = 14;
-                return this.setWeb3(delegateSigner, rpcProvider, hubUrl);
+                return this.setTokenContract();
 
               case 14:
                 _context.next = 16;
-                return this.setConnext(hubUrl);
+                return this.pollConnextState();
 
               case 16:
                 _context.next = 18;
-                return this.setTokenContract();
+                return this.setBrowserWalletMinimumBalance();
 
               case 18:
                 _context.next = 20;
-                return this.pollConnextState();
-
-              case 20:
-                _context.next = 22;
-                return this.setBrowserWalletMinimumBalance();
-
-              case 22:
-                _context.next = 24;
                 return this.poller();
 
-              case 24:
+              case 20:
                 return _context.abrupt("return", address);
 
-              case 25:
+              case 21:
               case "end":
                 return _context.stop();
             }
@@ -143,7 +142,7 @@ function () {
         }, _callee, this);
       }));
 
-      function init() {
+      function init(_x) {
         return _init.apply(this, arguments);
       }
 
@@ -157,13 +156,13 @@ function () {
     value: function () {
       var _setWeb = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee2(address, rpcUrl, hubUrl) {
+      _regenerator.default.mark(function _callee2(delegateSigner) {
         var providerOpts, provider, customWeb3;
         return _regenerator.default.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                providerOpts = new _ProviderOptions.default(address, rpcUrl, hubUrl).approving();
+                providerOpts = new _ProviderOptions.default(delegateSigner, this.rpcProvider, this.hubUrl).approving();
                 provider = (0, _clientProvider.default)(providerOpts);
                 customWeb3 = new _web.default(provider);
                 this.web3 = customWeb3;
@@ -176,7 +175,7 @@ function () {
         }, _callee2, this);
       }));
 
-      function setWeb3(_x, _x2, _x3) {
+      function setWeb3(_x2) {
         return _setWeb.apply(this, arguments);
       }
 
@@ -187,7 +186,7 @@ function () {
     value: function () {
       var _setConnext = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee3(hubUrl) {
+      _regenerator.default.mark(function _callee3() {
         var options, connext;
         return _regenerator.default.wrap(function _callee3$(_context3) {
           while (1) {
@@ -195,9 +194,9 @@ function () {
               case 0:
                 options = {
                   web3: this.web3,
-                  hubUrl: hubUrl,
+                  hubUrl: this.hubUrl,
                   user: this.address,
-                  origin: 'localhost'
+                  origin: this.domain
                 }; // *** Instantiate the connext client ***
 
                 _context3.next = 3;
@@ -221,7 +220,7 @@ function () {
         }, _callee3, this);
       }));
 
-      function setConnext(_x4) {
+      function setConnext() {
         return _setConnext.apply(this, arguments);
       }
 
@@ -276,11 +275,10 @@ function () {
                 that = this; // register listeners
 
                 this.connext.on('onStateChange', function (state) {
-                  // console.log('STATE cHANEGE', state)
                   if (state.persistent.channel) {
                     var balance = state.persistent.channel.balanceTokenUser; // balance is in Dai, return via callback so app/service can process usd amount
 
-                    that.stateUpdateCallback(balance);
+                    that.onStateUpdate(balance);
                   }
 
                   that.channelState = state.persistent.channel;
@@ -657,7 +655,7 @@ function () {
         }, _callee12, this);
       }));
 
-      function generateRedeemableLink(_x5) {
+      function generateRedeemableLink(_x3) {
         return _generateRedeemableLink.apply(this, arguments);
       }
 
@@ -669,7 +667,7 @@ function () {
       var _generatePayment = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee13(value, recipientAddress) {
-        var connext, payment;
+        var connext, payment, act;
         return _regenerator.default.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
@@ -699,9 +697,15 @@ function () {
                     }
                   }]
                 };
-                return _context13.abrupt("return", this.paymentHandler(payment));
+                _context13.next = 6;
+                return this.paymentHandler(payment);
 
-              case 5:
+              case 6:
+                act = _context13.sent;
+                console.log('act', act);
+                return _context13.abrupt("return", act);
+
+              case 9:
               case "end":
                 return _context13.stop();
             }
@@ -709,7 +713,7 @@ function () {
         }, _callee13, this);
       }));
 
-      function generatePayment(_x6, _x7) {
+      function generatePayment(_x4, _x5) {
         return _generatePayment.apply(this, arguments);
       }
 
@@ -796,7 +800,7 @@ function () {
         }, _callee14, this, [[12, 21]]);
       }));
 
-      function paymentHandler(_x8) {
+      function paymentHandler(_x6) {
         return _paymentHandler.apply(this, arguments);
       }
 
@@ -866,7 +870,7 @@ function () {
                     }, _callee15);
                   }));
 
-                  return function (_x10, _x11) {
+                  return function (_x8, _x9) {
                     return _ref3.apply(this, arguments);
                   };
                 }(), 5000, {
@@ -896,7 +900,7 @@ function () {
         }, _callee16, this);
       }));
 
-      function collateralizeRecipient(_x9) {
+      function collateralizeRecipient(_x7) {
         return _collateralizeRecipient.apply(this, arguments);
       }
 
@@ -991,12 +995,100 @@ function () {
         }, _callee18, this, [[5, 9]]);
       }));
 
-      function redeemPayment(_x12) {
+      function redeemPayment(_x10) {
         return _redeemPayment.apply(this, arguments);
       }
 
       return redeemPayment;
     }() // ************************************************* //
+    //                 Withdraw Funds                    //
+    // ************************************************* //
+
+  }, {
+    key: "withdrawalAllFunds",
+    value: function () {
+      var _withdrawalAllFunds = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee19(recipient) {
+        var withdrawEth,
+            connext,
+            web3,
+            withdrawalVal,
+            _args19 = arguments;
+        return _regenerator.default.wrap(function _callee19$(_context19) {
+          while (1) {
+            switch (_context19.prev = _context19.next) {
+              case 0:
+                withdrawEth = _args19.length > 1 && _args19[1] !== undefined ? _args19[1] : true;
+                connext = this.connext, web3 = this.web3;
+                withdrawalVal = this.createWithdrawValues(recipient, withdrawEth); // check for valid address
+                // let addressError = null
+                // let balanceError = null
+
+                if (web3.utils.isAddress(recipient)) {
+                  _context19.next = 5;
+                  break;
+                }
+
+                throw new Error("".concat(withdrawalVal.recipient, " is not a valid address"));
+
+              case 5:
+                // TODO: check the input balance is under channel balance
+                // TODO: allow partial withdrawals?
+                console.log("Withdrawing: ".concat(JSON.stringify(withdrawalVal, null, 2)));
+                _context19.next = 8;
+                return connext.withdraw(withdrawalVal);
+
+              case 8:
+              case "end":
+                return _context19.stop();
+            }
+          }
+        }, _callee19, this);
+      }));
+
+      function withdrawalAllFunds(_x11) {
+        return _withdrawalAllFunds.apply(this, arguments);
+      }
+
+      return withdrawalAllFunds;
+    }()
+  }, {
+    key: "createWithdrawValues",
+    value: function createWithdrawValues(recipient, withdrawEth) {
+      // set the state to contain the proper withdrawal args for
+      // eth or dai withdrawal
+      var channelState = this.channelState,
+          exchangeRate = this.exchangeRate;
+      var withdrawalVal = {
+        recipient: recipient,
+        exchangeRate: exchangeRate,
+        tokensToSell: '0',
+        withdrawalWeiUser: '0',
+        weiToSell: '0',
+        withdrawalTokenUser: '0'
+      };
+
+      if (withdrawEth) {
+        // withdraw all channel balance in eth
+        withdrawalVal = (0, _objectSpread2.default)({}, withdrawalVal, {
+          tokensToSell: channelState.balanceTokenUser,
+          withdrawalWeiUser: channelState.balanceWeiUser,
+          weiToSell: '0',
+          withdrawalTokenUser: '0'
+        });
+      } else {
+        // handle withdrawing all channel balance in dai
+        withdrawalVal = (0, _objectSpread2.default)({}, withdrawalVal, {
+          tokensToSell: '0',
+          withdrawalWeiUser: '0',
+          weiToSell: channelState.balanceWeiUser,
+          withdrawalTokenUser: channelState.balanceTokenUser
+        });
+      }
+
+      return withdrawalVal;
+    } // ************************************************* //
     //                    Helper                         //
     // ************************************************* //
 
