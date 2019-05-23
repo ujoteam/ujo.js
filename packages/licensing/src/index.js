@@ -1,5 +1,6 @@
 import { boostGas, getContractAddress } from '../../utils/dist';
 import { ETHUSDHandler } from '../../contracts-licensing';
+import { LicenseCore } from '../../contracts-licensing-v2';
 
 class Licensor {
   async init(config) {
@@ -41,4 +42,18 @@ class Licensor {
   }
 }
 
-export default Licensor;
+class Licensing {
+  async init(config) {
+    this.web3 = config.web3;
+    this.networkId = await config.getNetwork();
+
+    this.licensingAddress = getContractAddress(LicenseCore, this.networkId);
+    this.Licensing = new this.web3.eth.Contract(LicenseCore.abi, this.licensingAddress);
+  }
+
+  async license() {
+    console.log(this.Licensing);
+  }
+}
+
+export { Licensor, Licensing };
