@@ -51,7 +51,7 @@ contract('LicenseInventory', (accounts: string[]) => {
 
   beforeEach(async () => {
     token = await LicenseCore.new({ from: creator });
-    await token.setOwner(owner, { from: creator });
+    await token.transferOwnership(owner, { from: creator });
 
     p1Created = await token.createProduct(
       firstProduct.id,
