@@ -1,5 +1,6 @@
 # Build directories
 build/
+transpiled/
 lib/
 # dist/
 coverage/
