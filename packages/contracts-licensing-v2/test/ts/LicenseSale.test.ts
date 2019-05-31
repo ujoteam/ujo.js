@@ -493,7 +493,7 @@ contract('LicenseSale', (accounts: string[]) => {
           await token.renew(tokenId, 2, {
             value: secondProduct.price * 2
           });
-          const expectedExpirationTime = new BigNumber(now).add(
+          const expectedExpirationTime = new BigNumber(now).plus(
             secondProduct.interval * 2
           );
           const actualExpirationTime = await token.licenseExpirationTime(
