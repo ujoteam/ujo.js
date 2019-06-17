@@ -18,7 +18,7 @@
     "testwithrpc": "concurrently \"npm run testrpc\" \"npm run test\"",
     "travis": "npm run test",
     "pretravis": "rm -rf build/contracts",
-    "build-js": "browserify ./static/index.js | babel > ./static/bundle.js",
+    "build": "browserify ./static/index.js | babel > ./static/bundle.js",
     "start": "node index.js"
   },
   "repository": {

@@ -8,6 +8,9 @@ let currentNetwork;
 
 let contractAddress;
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+
 /**
  * Adds a 5% boost to the gas for web3 calls as to ensure tx's go through
  *
@@ -57,17 +60,16 @@ const deploy = async () => {
   contractAddress = result.options.address;
 };
 
-// TODO
 async function createProduct() {
-  if (!LicenseContract.networks[currentNetwork] || !LicenseContract.networks[currentNetwork].address) {
-    throw new Error(`LicenseCore.json doesn't contain an entry for the current network ID (${currentNetwork})`);
-  }
+  // if (!LicenseContract.networks[currentNetwork] || !LicenseContract.networks[currentNetwork].address) {
+  //   throw new Error(`LicenseCore.json doesn't contain an entry for the current network ID (${currentNetwork})`);
+  // }
 
   console.log(currentNetwork);
   console.log(LicenseContract.networks[currentNetwork].address);
   const ContractInstance = new web3.eth.Contract(LicenseContract.abi, LicenseContract.networks[currentNetwork].address);
   const firstProduct = {
-    id: 1,
+    id: Math.floor(Math.random() * 10000),
     price: 1000,
     initialInventory: 2,
     supply: 2,
@@ -106,6 +108,72 @@ async function createProduct() {
   console.log(p);
 }
 
+async function createLicense() {
+  console.log(currentNetwork);
+  console.log(LicenseContract.networks[currentNetwork].address);
+  const ContractInstance = new web3.eth.Contract(LicenseContract.abi, LicenseContract.networks[currentNetwork].address);
+
+  const firstProduct = {
+    id: Math.floor(Math.random() * 10000),
+    price: 1000,
+    initialInventory: 2,
+    supply: 2,
+    interval: 0,
+  };
+
+  let estimatedGas = await ContractInstance.methods
+    .createProduct(
+      firstProduct.id,
+      firstProduct.price,
+      firstProduct.initialInventory,
+      firstProduct.supply,
+      firstProduct.interval,
+    )
+    .estimateGas({
+      from: accounts[0],
+    });
+
+  let gas = boostGas(estimatedGas);
+  const obj = await ContractInstance.methods
+    .createProduct(
+      firstProduct.id,
+      firstProduct.price,
+      firstProduct.initialInventory,
+      firstProduct.supply,
+      firstProduct.interval,
+    )
+    .send({
+      from: accounts[0],
+      gas,
+      // value: amountInWei,
+      // to: contractAddress,
+    });
+
+  const p = await ContractInstance.methods.productInfo(firstProduct.id).call();
+  console.log(p);
+  console.log('===========')
+  console.log('product id', firstProduct.id)
+  console.log('accounts[1]', accounts[1])
+  console.log('ZERO_ADDRESS', ZERO_ADDRESS)
+
+  let paused = await ContractInstance.methods.unpause().send({ from: account[0] });
+  console.log(paused)
+
+  estimatedGas = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[1], ZERO_ADDRESS).estimateGas({
+    from: accounts[1],
+  })
+
+  console.log('+++++++++++')
+  console.log(estimatedGas);
+
+  gas = boostGas(estimatedGas);
+  const l = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).send({
+    gas,
+    from: accounts[0],
+    value: firstProduct.price
+  })
+}
+
 async function initEventListeners() {
   document.querySelector('#deploy').addEventListener('click', async () => {
     await deploy();
@@ -113,6 +181,10 @@ async function initEventListeners() {
 
   document.querySelector('#create-product').addEventListener('click', async () => {
     await createProduct();
+  });
+
+  document.querySelector('#create-license').addEventListener('click', async () => {
+    await createLicense();
   });
 }
 
