@@ -7,9 +7,7 @@ let accounts;
 let currentNetwork;
 
 let contractAddress;
-
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
 
 /**
  * Adds a 5% boost to the gas for web3 calls as to ensure tx's go through
@@ -64,12 +62,11 @@ async function createProduct() {
   // if (!LicenseContract.networks[currentNetwork] || !LicenseContract.networks[currentNetwork].address) {
   //   throw new Error(`LicenseCore.json doesn't contain an entry for the current network ID (${currentNetwork})`);
   // }
-
-  console.log(currentNetwork);
-  console.log(LicenseContract.networks[currentNetwork].address);
-  const ContractInstance = new web3.eth.Contract(LicenseContract.abi, LicenseContract.networks[currentNetwork].address);
+  // console.log(currentNetwork);
+  // console.log(LicenseContract.networks[currentNetwork].address);
+  const ContractInstance = new web3.eth.Contract(LicenseContract.abi, contractAddress);
   const firstProduct = {
-    id: Math.floor(Math.random() * 10000),
+    id: 1,
     price: 1000,
     initialInventory: 2,
     supply: 2,
@@ -98,10 +95,9 @@ async function createProduct() {
       firstProduct.interval,
     )
     .send({
-      from: accounts[0],
       gas,
-      // value: amountInWei,
-      // to: contractAddress,
+      from: accounts[0],
+      to: contractAddress,
     });
 
   const p = await ContractInstance.methods.productInfo(firstProduct.id).call();
@@ -109,10 +105,9 @@ async function createProduct() {
 }
 
 async function createLicense() {
-  console.log(currentNetwork);
-  console.log(LicenseContract.networks[currentNetwork].address);
-  const ContractInstance = new web3.eth.Contract(LicenseContract.abi, LicenseContract.networks[currentNetwork].address);
-
+  // console.log(currentNetwork);
+  // console.log(LicenseContract.networks[currentNetwork].address);
+  const ContractInstance = new web3.eth.Contract(LicenseContract.abi, contractAddress);
   const firstProduct = {
     id: Math.floor(Math.random() * 10000),
     price: 1000,
@@ -143,35 +138,31 @@ async function createLicense() {
       firstProduct.interval,
     )
     .send({
-      from: accounts[0],
       gas,
-      // value: amountInWei,
-      // to: contractAddress,
+      from: accounts[0],
+      to: contractAddress,
     });
 
   const p = await ContractInstance.methods.productInfo(firstProduct.id).call();
   console.log(p);
-  console.log('===========')
-  console.log('product id', firstProduct.id)
-  console.log('accounts[1]', accounts[1])
-  console.log('ZERO_ADDRESS', ZERO_ADDRESS)
 
-  let paused = await ContractInstance.methods.unpause().send({ from: account[0] });
-  console.log(paused)
-
-  estimatedGas = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[1], ZERO_ADDRESS).estimateGas({
-    from: accounts[1],
-  })
-
-  console.log('+++++++++++')
-  console.log(estimatedGas);
+  estimatedGas = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).estimateGas({
+    from: accounts[0],
+    value: firstProduct.price,
+  });
 
   gas = boostGas(estimatedGas);
-  const l = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).send({
+  const tx = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).send({
     gas,
     from: accounts[0],
-    value: firstProduct.price
-  })
+    value: firstProduct.price,
+  });
+
+  console.log(tx);
+  console.log(tx.events.LicenseIssued.returnValues.licenseId);
+
+  const owner = await ContractInstance.methods.ownerOf(tx.events.LicenseIssued.returnValues.licenseId).call();
+  console.log(owner);
 }
 
 async function initEventListeners() {

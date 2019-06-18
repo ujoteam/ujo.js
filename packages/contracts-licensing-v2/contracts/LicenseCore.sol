@@ -13,7 +13,7 @@ contract LicenseCore is Ownable, LicenseSale {
   address public newContractAddress;
 
   function LicenseCore() public {
-    paused = true;
+    paused = false;
 
     owner = msg.sender;
     withdrawalAddress = msg.sender;
