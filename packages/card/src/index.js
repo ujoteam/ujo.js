@@ -1,27 +1,42 @@
 import 'babel-polyfill';
-import { getConnextClient } from 'connext/dist/Connext';
+import * as Connext from 'connext';
+import { ethers as eth } from 'ethers';
 import Web3 from 'web3';
-import { emptyAddress } from 'connext/dist/Utils';
-import { convertPayment } from 'connext/dist/types';
-import getExchangeRates from 'connext/dist/lib/getExchangeRates';
-import { CurrencyType } from 'connext/dist/state/ConnextState/CurrencyTypes';
-import CurrencyConvertable from 'connext/dist/lib/currency/CurrencyConvertable';
-
-import BigNumber from 'bignumber.js';
 import BN from 'bn.js';
+// import { CurrencyType } from 'connext/dist/state/ConnextState/CurrencyTypes';
+// import CurrencyConvertable from 'connext/dist/lib/currency/CurrencyConvertable';
 
-import ProviderOptions from './utils/ProviderOptions';
-import clientProvider from './utils/web3/clientProvider';
+// import ProviderOptions from './utils/ProviderOptions';
+// import clientProvider from './utils/web3/clientProvider';
 import { getDollarSubstring } from './utils/getDollarSubstring';
-import createWallet from './walletGen';
+// import createWallet from './walletGen';
 import tokenAbi from './abi/humanToken.json';
 
 // set constants
-const DEPOSIT_ESTIMATED_GAS = new BigNumber('700000'); // 700k gas
-const HUB_EXCHANGE_CEILING = new BigNumber(Web3.utils.toWei('69', 'ether')); // 69 TST
-const CHANNEL_DEPOSIT_MAX = new BigNumber(Web3.utils.toWei('30', 'ether')); // 30 TST=
+const Big = n => eth.utils.bigNumberify(n.toString());
+const { getExchangeRates, hasPendingOps } = new Connext.Utils();
+const emptyAddress = eth.constants.AddressZero;
+const convertPayment = Connext.convert.Payment;
+const DEPOSIT_ESTIMATED_GAS = Big('700000'); // 700k gas
+const HUB_EXCHANGE_CEILING = eth.constants.WeiPerEther.mul(Big(69)); // 69 TST
+const CHANNEL_DEPOSIT_MAX = eth.constants.WeiPerEther.mul(Big(30)); // 30 TST
 
 const constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
+
+const validateAmount = value => {
+  // if there are more than 18 digits after the decimal, do not
+  // count them.
+  // throw a warning in the address error
+  // let balanceError = null
+  const decimal = value.startsWith('.') ? value.substr(1) : value.split('.')[1];
+
+  // let tokenVal = value;
+  if (decimal && decimal.length > 18) {
+    // tokenVal = value.startsWith('.') ? value.substr(0, 19) : `${value.split('.')[0]}.${decimal.substr(0, 18)}`;
+    throw new Error('Value is too precise. Please keep it to maximum 18 decimal points');
+    // balanceError = `Value too precise! Using ${tokenVal}`
+  } else return Web3.utils.toWei(`${value}`, 'ether');
+}
 
 // define class
 class Card {
@@ -32,7 +47,7 @@ class Card {
     this.onStateUpdate = opts.onStateUpdate ? opts.onStateUpdate : () => {};
     this.hubUrl = opts.hubUrl ? opts.hubUrl : 'http://localhost:8080';
     this.rpcProvider = opts.rpcProvider ? opts.rpcProvider : 'http://localhost:8545';
-    this.domain = opts.domain ? opts.domain : 'localhost'; // might not need
+    this.domain = opts.domain ? opts.domain : 'localhost';
 
     this.address = '';
     this.web3 = {};
@@ -42,21 +57,22 @@ class Card {
     this.channelState = null;
     this.connextState = null;
     this.exchangeRate = '0.00';
+
+    this.validateAmount = validateAmount;
   }
 
-  // TODO: take in mnemonic so that users can
-  // generate wallet from another dapplication
   async init(existingMnemonic) {
-    // check if mnemonic exists in LS
-    const mnemonic = existingMnemonic || localStorage.getItem('mnemonic');
+    // check if mnemonic is passed or exists in LS
+    const mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || eth.Wallet.createRandom().mnemonic;
+
     // otherwise generate wallet in create wallet
-    const delegateSigner = await createWallet(mnemonic);
-    const address = await delegateSigner.getAddressString();
-    this.address = address;
+    // const delegateSigner = await createWallet(mnemonic);
+    // const address = await delegateSigner.getAddressString();
+    // this.address = address;
 
     // set up web3 and connext
-    await this.setWeb3(delegateSigner);
-    await this.setConnext();
+    await this.setWeb3();
+    await this.setConnext(mnemonic);
     await this.setTokenContract();
 
     // start polling for state
@@ -65,41 +81,47 @@ class Card {
     await this.poller();
 
     // return address
-    return address;
+    return this.address;
   }
 
   // ************************************************* //
   //                State setters                      //
   // ************************************************* //
-  async setWeb3(delegateSigner) {
-    const providerOpts = new ProviderOptions(delegateSigner, this.rpcProvider, this.hubUrl).approving();
-    const provider = clientProvider(providerOpts);
-    const customWeb3 = new Web3(provider);
-    this.web3 = customWeb3;
+  async setWeb3() {
+    // async setWeb3(delegateSigner) {
+    const provider = new eth.providers.JsonRpcProvider(this.rpcProvider);
+    this.web3 = provider;
+    // const providerOpts = new ProviderOptions(delegateSigner, this.rpcProvider, this.hubUrl).approving();
+    // const provider = clientProvider(providerOpts);
+    // const customWeb3 = new Web3(provider);
+    // this.web3 = customWeb3;
   }
 
-  async setConnext() {
+  async setConnext(mnemonic) {
     const options = {
-      web3: this.web3,
       hubUrl: this.hubUrl,
-      user: this.address,
-      origin: this.domain,
+      mnemonic,
+      ethUrl: this.web3,
+      logLevel: 5,
+      // user: this.address,
+      // origin: this.domain,
     };
 
     // *** Instantiate the connext client ***
-    const connext = await getConnextClient(options);
+    // *** Create Address ***
+    this.connext = await Connext.createClient(options);
+    this.tokenAddress = this.connext.opts.tokenAddress;
+    this.address = await this.connext.wallet.getAddress();
     // console.log(`Successfully set up connext! Connext config:`);
     // console.log(`  - tokenAddress: ${connext.opts.tokenAddress}`);
     // console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
     // console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
     // console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
-    this.connext = connext;
-    this.tokenAddress = connext.opts.tokenAddress;
   }
 
   async setTokenContract() {
     try {
-      const tokenContract = new this.web3.eth.Contract(tokenAbi, this.tokenAddress);
+      const tokenContract = new eth.Contract(this.tokenAddress, tokenAbi, this.web3);
       this.tokenContract = tokenContract;
     } catch (e) {
       console.log('Error setting token contract', e); // eslint-disable-line
@@ -151,118 +173,99 @@ class Card {
     const { web3, connextState } = this;
     if (!web3 || !connextState) return;
 
-    const defaultGas = new BN(await web3.eth.getGasPrice())
+    // const defaultGas = new BN(await web3.eth.getGasPrice())
     // default connext multiple is 1.5, leave 2x for safety
-    const depositGasPrice = DEPOSIT_ESTIMATED_GAS.multipliedBy(new BigNumber(2)).multipliedBy(defaultGas);
+    // const depositGasPrice = DEPOSIT_ESTIMATED_GAS.multipliedBy(new BigNumber(2)).multipliedBy(defaultGas);
     // add dai conversion
-    const minConvertable = new CurrencyConvertable(CurrencyType.WEI, depositGasPrice, () => getExchangeRates(connextState));
+    // const minConvertable = new CurrencyConvertable(CurrencyType.WEI, depositGasPrice, () => getExchangeRates(connextState));
 
-    const browserMinimumBalance = {
-      wei: minConvertable.toWEI().amount,
-      dai: minConvertable.toUSD().amount,
-    }
 
-    this.browserMinimumBalance = browserMinimumBalance;
+    const gasPrice = await this.web3.getGasPrice();
+
+    // default connext multiple is 1.5, leave 2x for safety
+    const totalDepositGasWei = DEPOSIT_ESTIMATED_GAS.mul(Big(2)).mul(gasPrice);
+
+    this.minDeposit = Connext.Currency.WEI(totalDepositGasWei, () => getExchangeRates(connextState));
+    this.maxDeposit = Connext.Currency.DEI(CHANNEL_DEPOSIT_MAX, () => getExchangeRates(connextState));
   }
 
   // TODO: figure out why after proposing a deposit
-  // it halts awaiting a confirm 
+  // it halts awaiting a confirm
   async autoDeposit() {
-    const {
-      address,
-      tokenContract,
-      connextState,
-      tokenAddress,
-      exchangeRate,
-      rpcProvider,
-      web3,
-      browserMinimumBalance,
-    } = this;
-    if (!rpcProvider || !browserMinimumBalance) return;
+    const { address, tokenContract, connextState, tokenAddress, rpcProvider, web3, minDeposit } = this;
+    if (!rpcProvider || !minDeposit) return;
 
     const balance = await web3.eth.getBalance(address);
+    const gasPrice = (await web3.getGasPrice()).toHexString()
 
     let tokenBalance = '0';
     try {
-      tokenBalance = await tokenContract.methods.balanceOf(address).call();
+      tokenBalance = await tokenContract.balanceOf(address);
     } catch (e) {
       console.warn(
-        `Error fetching token balance, are you sure the token address (addr: ${tokenAddress}) is correct for the selected network (id: ${await web3.eth.net.getId()}))? Error: ${
-        e.message
-        }`
+        `Error fetching token balance, are you sure the token address (addr: ${tokenAddress}) is correct for the selected network (id: ${JSON.stringify(
+          await web3.getNetwork()
+        )}))? Error: ${e.message}`,
       );
+      return;
     }
 
-    if (balance !== '0' || tokenBalance !== '0') {
-      const minWei = new BigNumber(browserMinimumBalance.wei);
+    if (balance.gt(eth.constants.Zero) || tokenBalance.gt(eth.constants.Zero)) {
+      const minWei = minDeposit.toWEI().floor()
       // don't autodeposit anything under the threshold
       // update the refunding variable before returning
-      if (new BigNumber(balance).lt(minWei)) return;
+      if (balance.lt(minWei)) return;
 
       // only proceed with deposit request if you can deposit
-      if (!connextState || !connextState.runtime.canDeposit || exchangeRate === '0.00') return;
-      // if (!connextState || exchangeRate === '0.00') return;
+      if (!connextState) return;
+
+      if (
+        // something was submitted
+        connextState.runtime.deposit.submitted ||
+        connextState.runtime.withdrawal.submitted ||
+        connextState.runtime.collateral.submitted
+      ) {
+        console.log(`Deposit or withdrawal transaction in progress, will not auto-deposit`);
+        return;
+      }
 
       const channelDeposit = {
-        amountWei: new BigNumber(new BigNumber(balance).minus(minWei)).toFixed(0),
+        amountWei: balance.sub(minWei),
         amountToken: tokenBalance,
       };
 
-      if (channelDeposit.amountWei === '0' && channelDeposit.amountToken === '0') return;
+      if (channelDeposit.amountWei.eq(eth.constants.Zero) && channelDeposit.amountToken.eq(eth.constants.Zero)) return;
 
-      // if amount to deposit into channel is over the channel max
-      // then return excess deposit to the sending account
-      // const weiToReturn = this.constructor.calculateWeiToRefund(channelDeposit.amountWei, connextState);
-
-      // return wei to sender
-      // if (weiToReturn !== '0') {
-      //   // await this.returnWei(weiToReturn);
-      //   return;
-      // }
-
-      // update channel deposit
-      // const weiDeposit = new BigNumber(channelDeposit.amountWei).minus(new BigNumber(weiToReturn)); // with refund happening... we are removing that
-      const weiDeposit = new BigNumber(channelDeposit.amountWei);
-      channelDeposit.amountWei = weiDeposit.toFixed(0);
-
-      await this.connext.deposit(channelDeposit);
+      await this.connext.deposit(
+        {
+          amountWei: channelDeposit.amountWei.toString(),
+          amountToken: channelDeposit.amountToken.toString(),
+        },
+        { gasPrice },
+      );
     }
-  }
-
-  // returns a BigNumber
-  static calculateWeiToRefund(wei, connextState) {
-    // channel max tokens is minimum of the ceiling that
-    // the hub would exchange, or a set deposit max
-    const ceilingWei = new CurrencyConvertable(
-      CurrencyType.BEI,
-      BigNumber.min(HUB_EXCHANGE_CEILING, CHANNEL_DEPOSIT_MAX),
-      () => getExchangeRates(connextState)
-    ).toWEI().amountBigNumber;
-
-    const weiToRefund = BigNumber.max(new BN(wei).minus(ceilingWei), new BN(0));
-    return weiToRefund.toFixed(0);
   }
 
   // swapping wei for dai
   async autoSwap() {
     const { channelState, connextState } = this;
-    if (!connextState || !connextState.runtime.canExchange) return;
+    if (!connextState || hasPendingOps(channelState)) return;
 
-    const weiBalance = new BigNumber(channelState.balanceWeiUser);
-    const tokenBalance = new BigNumber(channelState.balanceTokenUser);
-    if (channelState && weiBalance.gt(new BigNumber('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING)) {
-      // console.log(`Exchanging ${channelState.balanceWeiUser} wei`); // eslint-disable-line
+    const weiBalance = Big(channelState.balanceWeiUser);
+    const tokenBalance = Big(channelState.balanceTokenUser);
+    if (channelState && weiBalance.gt(Big('0')) && tokenBalance.lte(HUB_EXCHANGE_CEILING)) {
       await this.connext.exchange(channelState.balanceWeiUser, 'wei');
     }
   }
 
-
   // ************************************************* //
   //                  Send Funds                       //
   // ************************************************* //
+
   async generateRedeemableLink(value) {
     const { connext } = this;
     if (Number.isNaN(value)) throw new Error('Value is not a number');
+    value = this.validateAmount(value);
 
     // generate secret, set type, and set
     // recipient to empty address
@@ -273,7 +276,7 @@ class Card {
           type: 'PT_LINK',
           recipient: emptyAddress,
           amount: {
-            amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
+            amountToken: value,
             amountWei: '0',
           },
           meta: { secret: connext.generateSecret() },
@@ -285,19 +288,19 @@ class Card {
   }
 
   async generatePayment(value, recipientAddress) {
-    const { connext } = this;
     if (Number.isNaN(value)) throw new Error('Value is not a number');
+    value = this.validateAmount(value);
 
     // generate secret, set type, and set
     const payment = {
       meta: { purchaseId: 'ujo' },
       payments: [
         {
-          type: 'PT_CHANNEL',
+          type: 'PT_OPTIMISTIC',
           recipient: recipientAddress,
           // secret: connext.generateSecret(),
           amount: {
-            amountToken: connext.opts.web3.utils.toWei(value.toString(), "ether"),
+            amountToken: value,
             amountWei: '0',
           },
         }
