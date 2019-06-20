@@ -58,18 +58,39 @@ const deploy = async () => {
   contractAddress = result.options.address;
 };
 
+async function updateProducts(productIds) {
+  const select = document.getElementById('productIds');
+  // Clear old values first
+  while (select.options.length > 0) {
+    select.remove(0);
+  }
+  // Then populate
+  for (let i = 0; i < productIds.length; i++) {
+    const opt = productIds[i];
+    const el = document.createElement('option');
+    el.textContent = opt;
+    el.value = opt;
+    select.appendChild(el);
+  }
+}
+
 async function createProduct() {
   // if (!LicenseContract.networks[currentNetwork] || !LicenseContract.networks[currentNetwork].address) {
   //   throw new Error(`LicenseCore.json doesn't contain an entry for the current network ID (${currentNetwork})`);
   // }
   // console.log(currentNetwork);
   // console.log(LicenseContract.networks[currentNetwork].address);
+
+  const productId = document.getElementById('id').value;
+  const price = document.getElementById('price').value;
+  const inventory = document.getElementById('inventory').value;
+
   const ContractInstance = new web3.eth.Contract(LicenseContract.abi, contractAddress);
   const firstProduct = {
-    id: 1,
-    price: 1000,
-    initialInventory: 2,
-    supply: 2,
+    id: productId,
+    price,
+    initialInventory: inventory,
+    supply: inventory,
     interval: 0,
   };
 
@@ -102,66 +123,37 @@ async function createProduct() {
 
   const p = await ContractInstance.methods.productInfo(firstProduct.id).call();
   console.log(p);
+
+  const productIds = await ContractInstance.methods.getAllProductIds().call();
+  updateProducts(productIds);
+  console.log(productIds);
 }
 
 async function createLicense() {
   // console.log(currentNetwork);
   // console.log(LicenseContract.networks[currentNetwork].address);
   const ContractInstance = new web3.eth.Contract(LicenseContract.abi, contractAddress);
-  const firstProduct = {
-    id: Math.floor(Math.random() * 10000),
-    price: 1000,
-    initialInventory: 2,
-    supply: 2,
-    interval: 0,
-  };
+  const e = document.getElementById('productIds');
+  const productId = e.options[e.selectedIndex].value;
 
-  let estimatedGas = await ContractInstance.methods
-    .createProduct(
-      firstProduct.id,
-      firstProduct.price,
-      firstProduct.initialInventory,
-      firstProduct.supply,
-      firstProduct.interval,
-    )
-    .estimateGas({
-      from: accounts[0],
-    });
-
-  let gas = boostGas(estimatedGas);
-  const obj = await ContractInstance.methods
-    .createProduct(
-      firstProduct.id,
-      firstProduct.price,
-      firstProduct.initialInventory,
-      firstProduct.supply,
-      firstProduct.interval,
-    )
-    .send({
-      gas,
-      from: accounts[0],
-      to: contractAddress,
-    });
-
-  const p = await ContractInstance.methods.productInfo(firstProduct.id).call();
-  console.log(p);
-
-  estimatedGas = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).estimateGas({
+  const productInfo = await ContractInstance.methods.productInfo(productId).call();
+  console.log(productInfo);
+  const estimatedGas = await ContractInstance.methods.purchase(productId, 1, accounts[0], ZERO_ADDRESS).estimateGas({
     from: accounts[0],
-    value: firstProduct.price,
+    value: productInfo.price, // price
   });
 
-  gas = boostGas(estimatedGas);
-  const tx = await ContractInstance.methods.purchase(firstProduct.id, 1, accounts[0], ZERO_ADDRESS).send({
+  const gas = boostGas(estimatedGas);
+  const license = await ContractInstance.methods.purchase(productId, 1, accounts[0], ZERO_ADDRESS).send({
     gas,
     from: accounts[0],
-    value: firstProduct.price,
+    value: productInfo.price,
   });
 
-  console.log(tx);
-  console.log(tx.events.LicenseIssued.returnValues.licenseId);
+  console.log(license);
+  console.log(license.events.LicenseIssued.returnValues.licenseId);
 
-  const owner = await ContractInstance.methods.ownerOf(tx.events.LicenseIssued.returnValues.licenseId).call();
+  const owner = await ContractInstance.methods.ownerOf(license.events.LicenseIssued.returnValues.licenseId).call();
   console.log(owner);
 }
 
@@ -174,7 +166,7 @@ async function initEventListeners() {
     await createProduct();
   });
 
-  document.querySelector('#create-license').addEventListener('click', async () => {
+  document.querySelector('#purchase').addEventListener('click', async () => {
     await createLicense();
   });
 }

@@ -90,8 +90,6 @@ contract('LicenseSale', (accounts: string[]) => {
       thirdProduct.interval,
       { from: owner }
     );
-
-    await token.unpause({ from: owner });
   });
 
   describe('when purchasing', async () => {

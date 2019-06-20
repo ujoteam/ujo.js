@@ -10,16 +10,29 @@
 
 <body>
     <div>
-        <button id="deploy">Deploy</button>
+        <button id="deploy">Deploy Store</button><br>
     </div>
-
+    <br>
+    <div>
+        <form id="product">
+            Product ID: <input id="id" type="text" value=""><br>
+            Price: <input id="price" type="text" value=""><br>
+            Inventory: <input id="inventory" type="text" value=""><br>
+        </form>
+    </div>
+    <br>
     <div>
         <button id="create-product">Create a product</button>
     </div>
+    <br>
 
     <div>
-        <button id="create-license">Create a license</button>
+        <select id="productIds">
+            <option>Select Product ID</option>
+        </select>
+        <button id="purchase">Purchase</button>
     </div>
+
     <script src="bundle.js"></script>
 </body>
 

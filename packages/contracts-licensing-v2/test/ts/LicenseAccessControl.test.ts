@@ -89,9 +89,6 @@ contract('LicenseAccessControl', (accounts: string[]) => {
       await assertRevert(token.unpause({ from: user1 }));
     });
     it('should allow the owner', async () => {
-      (await token.paused()).should.be.true();
-      await token.unpause({ from: owner });
-
       (await token.paused()).should.be.false();
       await token.pause({ from: owner });
       (await token.paused()).should.be.true();

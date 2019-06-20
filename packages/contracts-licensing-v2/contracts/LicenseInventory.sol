@@ -316,7 +316,7 @@ contract LicenseInventory is Ownable, LicenseBase {
   function productInfo(uint256 _productId)
     public
     view
-    returns (uint256, uint256, uint256, uint256, bool)
+    returns (uint256 price, uint256 inventory, uint256 totalSupply, uint256 interval, bool renewable)
   {
     return (
       priceOf(_productId),

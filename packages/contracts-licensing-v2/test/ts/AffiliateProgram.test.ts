@@ -93,8 +93,6 @@ contract('AffiliateProgram', (accounts: string[]) => {
       { from: creator }
     );
 
-    await token.unpause({ from: creator });
-
     affiliate = await AffiliateProgram.new(token.address, { from: creator });
     await token.setAffiliateProgramAddress(affiliate.address, {
       from: creator

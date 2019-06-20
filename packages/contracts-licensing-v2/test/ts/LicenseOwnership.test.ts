@@ -76,8 +76,6 @@ contract('LicenseOwnership (ERC721)', (accounts: string[]) => {
 
     await token.setTokenMetadataBaseURI('http://localhost/', { from: owner });
 
-    await token.unpause({ from: owner });
-
     await token.purchase(firstProduct.id, 1, user1, ZERO_ADDRESS, {
       from: user1,
       value: firstProduct.price
