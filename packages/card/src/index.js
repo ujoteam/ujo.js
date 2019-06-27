@@ -104,7 +104,7 @@ class Card {
     const options = {
       hubUrl: this.hubUrl,
       mnemonic,
-      ethUrl: this.web3,
+      ethUrl: this.rpcProvider, // Note: can use hubs eth provider by omitting this as well
       logLevel: 5,
       // user: this.address,
       // origin: this.domain,
@@ -116,10 +116,10 @@ class Card {
     this.tokenAddress = this.connext.opts.tokenAddress;
     this.address = await this.connext.wallet.getAddress();
     // console.log(`Successfully set up connext! Connext config:`);
-    // console.log(`  - tokenAddress: ${connext.opts.tokenAddress}`);
-    // console.log(`  - hubAddress: ${connext.opts.hubAddress}`);
-    // console.log(`  - contractAddress: ${connext.opts.contractAddress}`);
-    // console.log(`  - ethNetworkId: ${connext.opts.ethNetworkId}`);
+    // console.log(`  - tokenAddress: ${this.connext.opts.tokenAddress}`);
+    // console.log(`  - hubAddress: ${this.connext.opts.hubAddress}`);
+    // console.log(`  - contractAddress: ${this.connext.opts.contractAddress}`);
+    // console.log(`  - ethNetworkId: ${this.connext.opts.ethNetworkId}`);
   }
 
   async setTokenContract() {
