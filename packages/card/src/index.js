@@ -24,6 +24,9 @@ const CHANNEL_DEPOSIT_MAX = eth.constants.WeiPerEther.mul(Big(30)); // 30 TST
 const constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
 
 const validateAmount = value => {
+  value = value.toString();
+  console.log('value', value)
+  console.log('typeof', typeof value)
   // if there are more than 18 digits after the decimal, do not
   // count them.
   // throw a warning in the address error
@@ -143,8 +146,9 @@ class Card {
 
       that.channelState = state.persistent.channel;
       that.connextState = state;
-      that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
+      that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.DAI : 0;
       that.runtime = state.runtime;
+      console.log('Connext updated:', state)
     });
 
     // start polling
@@ -154,7 +158,6 @@ class Card {
   async poller() {
     await this.autoDeposit();
     await this.autoSwap();
-    // await this.connext.requestCollateral();
 
     setInterval(async () => {
       await this.autoDeposit();
@@ -195,8 +198,8 @@ class Card {
     const { address, tokenContract, connextState, tokenAddress, rpcProvider, web3, minDeposit } = this;
     if (!rpcProvider || !minDeposit) return;
 
-    const balance = await web3.eth.getBalance(address);
-    const gasPrice = (await web3.getGasPrice()).toHexString()
+    const balance = await web3.getBalance(address);
+    const gasPrice = (await web3.getGasPrice()).toHexString();
 
     let tokenBalance = '0';
     try {
@@ -275,10 +278,8 @@ class Card {
         {
           type: 'PT_LINK',
           recipient: emptyAddress,
-          amount: {
-            amountToken: value,
-            amountWei: '0',
-          },
+          amountToken: value,
+          amountWei: '0',
           meta: { secret: connext.generateSecret() },
         }
       ],
@@ -298,38 +299,38 @@ class Card {
         {
           type: 'PT_OPTIMISTIC',
           recipient: recipientAddress,
-          // secret: connext.generateSecret(),
-          amount: {
-            amountToken: value,
-            amountWei: '0',
-          },
+          amountToken: value,
+          amountWei: '0',
         }
       ],
     };
 
     const act = await this.paymentHandler(payment);
-    console.log('act', act);
     return act;
   }
 
   // returns true on a successful payment to address
   // return the secret on a successful link generation
   // otherwise throws an error
-  async paymentHandler(payment) {
-    const { connext, web3, channelState } = this;
+  async paymentHandler(paymentVal) {
+    const { connext, channelState } = this;
 
     // check if the recipient needs collateral
     // is utilized later in fn. Consider in a v2
     const needsCollateral = await connext.recipientNeedsCollateral(
-      payment.payments[0].recipient,
-      convertPayment('str', payment.payments[0].amount)
+      paymentVal.payments[0].recipient,
+      convertPayment('str', {
+        amountWei: paymentVal.payments[0].amountWei,
+        amountToken: paymentVal.payments[0].amountToken
+      }),
     );
 
-    let balanceError, addressError;
+    let balanceError;
+    let addressError;
 
     // validate that the token amount is within bounds
-    const paymentAmount = convertPayment('bn', payment.payments[0].amount);
-    if (paymentAmount.amountToken.gt(new BN(channelState.balanceTokenUser))) {
+    const paymentAmount = convertPayment('bn', paymentVal.payments[0]);
+    if (paymentAmount.amountToken.gt(Big(channelState.balanceTokenUser))) {
       balanceError = 'Insufficient balance in channel';
     }
 
@@ -339,8 +340,8 @@ class Card {
 
     // validate recipient is valid address OR the empty address
     // TODO: handle in other functions that structure payment object
-    const { recipient } = payment.payments[0];
-    if (!web3.utils.isAddress(recipient) && recipient !== emptyAddress) {
+    const { recipient } = paymentVal.payments[0];
+    if (!Web3.utils.isAddress(recipient) && recipient !== emptyAddress) {
       addressError = 'Please choose a valid address';
     }
 
@@ -361,13 +362,14 @@ class Card {
 
     // otherwise make payment
     try {
-      let paymentRes = await connext.buy(payment);
+      let paymentRes = await connext.buy(paymentVal);
       // console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
-      if (payment.payments[0].type === 'PT_LINK') {
-        return payment.payments[0].meta.secret;
+      if (paymentVal.payments[0].type === 'PT_LINK') {
+        return paymentVal.payments[0].meta.secret;
       }
       return true;
     } catch (e) {
+      console.log('error with payment', e)
       throw new Error(e);
     }
   }
@@ -455,16 +457,25 @@ class Card {
   // ************************************************* //
   //                 Withdraw Funds                    //
   // ************************************************* //
-  async withdrawalAllFunds(recipient, withdrawEth = true) {
-    const { connext, web3 } = this;
+  async withdrawalAllFunds(originalRecipient, withdrawEth = true) {
+    const { connext } = this;
+    const recipient = originalRecipient.toLowerCase();
+
+    if (!eth.utils.isHexString(recipient)) {
+      throw new Error(`Invalid hex string: ${originalRecipient}`);
+    }
+    if (eth.utils.arrayify(recipient).length !== 20) {
+      throw new Error(`Invalid length: ${originalRecipient}`);
+    }
+
     const withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
 
-    // check for valid address
-    // let addressError = null
-    // let balanceError = null
-    if (!web3.utils.isAddress(recipient)) {
-      throw new Error(`${withdrawalVal.recipient} is not a valid address`);
-    }
+    // // check for valid address
+    // // let addressError = null
+    // // let balanceError = null
+    // if (!Web3.utils.isAddress(recipient)) {
+    //   throw new Error(`${withdrawalVal.recipient} is not a valid address`);
+    // }
 
     // TODO: check the input balance is under channel balance
     // TODO: allow partial withdrawals?
@@ -477,7 +488,7 @@ class Card {
   createWithdrawValues(recipient, withdrawEth) {
     // set the state to contain the proper withdrawal args for
     // eth or dai withdrawal
-    const { channelState, exchangeRate } = this;
+    const { channelState, connextState, exchangeRate } = this;
     let withdrawalVal = {
       recipient,
       exchangeRate,
@@ -486,24 +497,30 @@ class Card {
       weiToSell: '0',
       withdrawalTokenUser: '0',
     };
-    if (withdrawEth) {
+
+    if (withdrawEth && channelState && connextState) {
+      const { custodialBalance } = connextState.persistent;
+      const amountToken = Big(channelState.balanceTokenUser).add(custodialBalance.balanceToken);
+      const amountWei = Big(channelState.balanceWeiUser).add(custodialBalance.balanceWei);
+
       // withdraw all channel balance in eth
       withdrawalVal = {
         ...withdrawalVal,
-        tokensToSell: channelState.balanceTokenUser,
-        withdrawalWeiUser: channelState.balanceWeiUser,
+        tokensToSell: amountToken.toString(),
+        withdrawalWeiUser: amountWei.toString(),
         weiToSell: '0',
         withdrawalTokenUser: '0',
       };
     } else {
-      // handle withdrawing all channel balance in dai
-      withdrawalVal = {
-        ...withdrawalVal,
-        tokensToSell: '0',
-        withdrawalWeiUser: '0',
-        weiToSell: channelState.balanceWeiUser,
-        withdrawalTokenUser: channelState.balanceTokenUser,
-      };
+      throw new Error('Not permitting withdrawal of tokens at this time');
+      // // handle withdrawing all channel balance in dai
+      // withdrawalVal = {
+      //   ...withdrawalVal,
+      //   tokensToSell: '0',
+      //   withdrawalWeiUser: '0',
+      //   weiToSell: channelState.balanceWeiUser,
+      //   withdrawalTokenUser: channelState.balanceTokenUser,
+      // };
     }
 
     return withdrawalVal;
