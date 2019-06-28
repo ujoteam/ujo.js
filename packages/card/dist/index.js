@@ -29,17 +29,10 @@ var _ethers = require("ethers");
 
 var _web = _interopRequireDefault(require("web3"));
 
-var _bn = _interopRequireDefault(require("bn.js"));
-
 var _getDollarSubstring = require("./utils/getDollarSubstring");
 
 var _humanToken = _interopRequireDefault(require("./abi/humanToken.json"));
 
-// import { CurrencyType } from 'connext/dist/state/ConnextState/CurrencyTypes';
-// import CurrencyConvertable from 'connext/dist/lib/currency/CurrencyConvertable';
-// import ProviderOptions from './utils/ProviderOptions';
-// import clientProvider from './utils/web3/clientProvider';
-// import createWallet from './walletGen';
 // set constants
 var Big = function Big(n) {
   return _ethers.ethers.utils.bigNumberify(n.toString());
@@ -61,15 +54,11 @@ var CHANNEL_DEPOSIT_MAX = _ethers.ethers.constants.WeiPerEther.mul(Big(30)); // 
 
 var constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
 
-var validateAmount = function validateAmount(value) {
-  // if there are more than 18 digits after the decimal, do not
-  // count them.
-  // throw a warning in the address error
-  // let balanceError = null
-  var decimal = value.startsWith('.') ? value.substr(1) : value.split('.')[1]; // let tokenVal = value;
+var validateAmount = function validateAmount(ogValue) {
+  var value = ogValue.toString();
+  var decimal = value.startsWith('.') ? value.substr(1) : value.split('.')[1]; // if there are more than 18 digits after the decimal, do not count them
 
   if (decimal && decimal.length > 18) {
-    // tokenVal = value.startsWith('.') ? value.substr(0, 19) : `${value.split('.')[0]}.${decimal.substr(0, 18)}`;
     throw new Error('Value is too precise. Please keep it to maximum 18 decimal points'); // balanceError = `Value too precise! Using ${tokenVal}`
   } else return _web.default.utils.toWei("".concat(value), 'ether');
 }; // define class
@@ -109,11 +98,7 @@ function () {
             switch (_context.prev = _context.next) {
               case 0:
                 // check if mnemonic is passed or exists in LS
-                mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || _ethers.ethers.Wallet.createRandom().mnemonic; // otherwise generate wallet in create wallet
-                // const delegateSigner = await createWallet(mnemonic);
-                // const address = await delegateSigner.getAddressString();
-                // this.address = address;
-                // set up web3 and connext
+                mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || _ethers.ethers.Wallet.createRandom().mnemonic; // set up web3 and connext
 
                 _context.next = 3;
                 return this.setWeb3();
@@ -169,12 +154,8 @@ function () {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                // async setWeb3(delegateSigner) {
                 provider = new _ethers.ethers.providers.JsonRpcProvider(this.rpcProvider);
-                this.web3 = provider; // const providerOpts = new ProviderOptions(delegateSigner, this.rpcProvider, this.hubUrl).approving();
-                // const provider = clientProvider(providerOpts);
-                // const customWeb3 = new Web3(provider);
-                // this.web3 = customWeb3;
+                this.web3 = provider;
 
               case 2:
               case "end":
@@ -204,7 +185,8 @@ function () {
                 options = {
                   hubUrl: this.hubUrl,
                   mnemonic: mnemonic,
-                  ethUrl: this.web3,
+                  ethUrl: this.rpcProvider,
+                  // Note: can use hubs eth provider by omitting this as well
                   logLevel: 5 // user: this.address,
                   // origin: this.domain,
 
@@ -294,8 +276,9 @@ function () {
 
                   that.channelState = state.persistent.channel;
                   that.connextState = state;
-                  that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.USD : 0;
+                  that.exchangeRate = state.runtime.exchangeRate ? state.runtime.exchangeRate.rates.DAI : 0;
                   that.runtime = state.runtime;
+                  console.log('Connext updated:', state);
                 }); // start polling
 
                 _context5.next = 4;
@@ -335,7 +318,6 @@ function () {
                 return this.autoSwap();
 
               case 4:
-                // await this.connext.requestCollateral();
                 setInterval(
                 /*#__PURE__*/
                 (0, _asyncToGenerator2.default)(
@@ -439,9 +421,7 @@ function () {
       }
 
       return setBrowserWalletMinimumBalance;
-    }() // TODO: figure out why after proposing a deposit
-    // it halts awaiting a confirm
-
+    }()
   }, {
     key: "autoDeposit",
     value: function () {
@@ -464,7 +444,7 @@ function () {
 
               case 3:
                 _context10.next = 5;
-                return web3.eth.getBalance(address);
+                return web3.getBalance(address);
 
               case 5:
                 balance = _context10.sent;
@@ -653,10 +633,8 @@ function () {
                   payments: [{
                     type: 'PT_LINK',
                     recipient: emptyAddress,
-                    amount: {
-                      amountToken: value,
-                      amountWei: '0'
-                    },
+                    amountToken: value,
+                    amountWei: '0',
                     meta: {
                       secret: connext.generateSecret()
                     }
@@ -706,11 +684,8 @@ function () {
                   payments: [{
                     type: 'PT_OPTIMISTIC',
                     recipient: recipientAddress,
-                    // secret: connext.generateSecret(),
-                    amount: {
-                      amountToken: value,
-                      amountWei: '0'
-                    }
+                    amountToken: value,
+                    amountWei: '0'
                   }]
                 };
                 _context13.next = 6;
@@ -718,10 +693,9 @@ function () {
 
               case 6:
                 act = _context13.sent;
-                console.log('act', act);
                 return _context13.abrupt("return", act);
 
-              case 9:
+              case 8:
               case "end":
                 return _context13.stop();
             }
@@ -743,24 +717,27 @@ function () {
     value: function () {
       var _paymentHandler = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee14(payment) {
-        var connext, web3, channelState, needsCollateral, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
+      _regenerator.default.mark(function _callee14(paymentVal) {
+        var connext, channelState, needsCollateral, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
         return _regenerator.default.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
               case 0:
-                connext = this.connext, web3 = this.web3, channelState = this.channelState; // check if the recipient needs collateral
+                connext = this.connext, channelState = this.channelState; // check if the recipient needs collateral
                 // is utilized later in fn. Consider in a v2
 
                 _context14.next = 3;
-                return connext.recipientNeedsCollateral(payment.payments[0].recipient, convertPayment('str', payment.payments[0].amount));
+                return connext.recipientNeedsCollateral(paymentVal.payments[0].recipient, convertPayment('str', {
+                  amountWei: paymentVal.payments[0].amountWei,
+                  amountToken: paymentVal.payments[0].amountToken
+                }));
 
               case 3:
                 needsCollateral = _context14.sent;
                 // validate that the token amount is within bounds
-                paymentAmount = convertPayment('bn', payment.payments[0].amount);
+                paymentAmount = convertPayment('bn', paymentVal.payments[0]);
 
-                if (paymentAmount.amountToken.gt(new _bn.default(channelState.balanceTokenUser))) {
+                if (paymentAmount.amountToken.gt(Big(channelState.balanceTokenUser))) {
                   balanceError = 'Insufficient balance in channel';
                 }
 
@@ -770,9 +747,9 @@ function () {
                 // TODO: handle in other functions that structure payment object
 
 
-                recipient = payment.payments[0].recipient;
+                recipient = paymentVal.payments[0].recipient;
 
-                if (!web3.utils.isAddress(recipient) && recipient !== emptyAddress) {
+                if (!_web.default.utils.isAddress(recipient) && recipient !== emptyAddress) {
                   addressError = 'Please choose a valid address';
                 } // return if either errors exist
 
@@ -788,17 +765,17 @@ function () {
               case 12:
                 _context14.prev = 12;
                 _context14.next = 15;
-                return connext.buy(payment);
+                return connext.buy(paymentVal);
 
               case 15:
                 paymentRes = _context14.sent;
 
-                if (!(payment.payments[0].type === 'PT_LINK')) {
+                if (!(paymentVal.payments[0].type === 'PT_LINK')) {
                   _context14.next = 18;
                   break;
                 }
 
-                return _context14.abrupt("return", payment.payments[0].meta.secret);
+                return _context14.abrupt("return", paymentVal.payments[0].meta.secret);
 
               case 18:
                 return _context14.abrupt("return", true);
@@ -806,9 +783,10 @@ function () {
               case 21:
                 _context14.prev = 21;
                 _context14.t0 = _context14["catch"](12);
+                console.log('error with payment', _context14.t0);
                 throw new Error(_context14.t0);
 
-              case 24:
+              case 25:
               case "end":
                 return _context14.stop();
             }
@@ -1025,10 +1003,10 @@ function () {
     value: function () {
       var _withdrawalAllFunds = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee19(recipient) {
+      _regenerator.default.mark(function _callee19(originalRecipient) {
         var withdrawEth,
             connext,
-            web3,
+            recipient,
             withdrawalVal,
             _args19 = arguments;
         return _regenerator.default.wrap(function _callee19$(_context19) {
@@ -1036,26 +1014,38 @@ function () {
             switch (_context19.prev = _context19.next) {
               case 0:
                 withdrawEth = _args19.length > 1 && _args19[1] !== undefined ? _args19[1] : true;
-                connext = this.connext, web3 = this.web3;
-                withdrawalVal = this.createWithdrawValues(recipient, withdrawEth); // check for valid address
-                // let addressError = null
-                // let balanceError = null
+                connext = this.connext;
+                recipient = originalRecipient.toLowerCase();
 
-                if (web3.utils.isAddress(recipient)) {
+                if (_ethers.ethers.utils.isHexString(recipient)) {
                   _context19.next = 5;
                   break;
                 }
 
-                throw new Error("".concat(withdrawalVal.recipient, " is not a valid address"));
+                throw new Error("Invalid hex string: ".concat(originalRecipient));
 
               case 5:
+                if (!(_ethers.ethers.utils.arrayify(recipient).length !== 20)) {
+                  _context19.next = 7;
+                  break;
+                }
+
+                throw new Error("Invalid length: ".concat(originalRecipient));
+
+              case 7:
+                withdrawalVal = this.createWithdrawValues(recipient, withdrawEth); // // check for valid address
+                // // let addressError = null
+                // // let balanceError = null
+                // if (!Web3.utils.isAddress(recipient)) {
+                //   throw new Error(`${withdrawalVal.recipient} is not a valid address`);
+                // }
                 // TODO: check the input balance is under channel balance
-                // TODO: allow partial withdrawals?
+
                 console.log("Withdrawing: ".concat(JSON.stringify(withdrawalVal, null, 2)));
-                _context19.next = 8;
+                _context19.next = 11;
                 return connext.withdraw(withdrawalVal);
 
-              case 8:
+              case 11:
               case "end":
                 return _context19.stop();
             }
@@ -1075,6 +1065,7 @@ function () {
       // set the state to contain the proper withdrawal args for
       // eth or dai withdrawal
       var channelState = this.channelState,
+          connextState = this.connextState,
           exchangeRate = this.exchangeRate;
       var withdrawalVal = {
         recipient: recipient,
@@ -1085,22 +1076,26 @@ function () {
         withdrawalTokenUser: '0'
       };
 
-      if (withdrawEth) {
-        // withdraw all channel balance in eth
+      if (withdrawEth && channelState && connextState) {
+        var custodialBalance = connextState.persistent.custodialBalance;
+        var amountToken = Big(channelState.balanceTokenUser).add(custodialBalance.balanceToken);
+        var amountWei = Big(channelState.balanceWeiUser).add(custodialBalance.balanceWei); // withdraw all channel balance in eth
+
         withdrawalVal = (0, _objectSpread2.default)({}, withdrawalVal, {
-          tokensToSell: channelState.balanceTokenUser,
-          withdrawalWeiUser: channelState.balanceWeiUser,
+          tokensToSell: amountToken.toString(),
+          withdrawalWeiUser: amountWei.toString(),
           weiToSell: '0',
           withdrawalTokenUser: '0'
         });
       } else {
-        // handle withdrawing all channel balance in dai
-        withdrawalVal = (0, _objectSpread2.default)({}, withdrawalVal, {
-          tokensToSell: '0',
-          withdrawalWeiUser: '0',
-          weiToSell: channelState.balanceWeiUser,
-          withdrawalTokenUser: channelState.balanceTokenUser
-        });
+        throw new Error('Not permitting withdrawal of tokens at this time'); // // handle withdrawing all channel balance in dai
+        // withdrawalVal = {
+        //   ...withdrawalVal,
+        //   tokensToSell: '0',
+        //   withdrawalWeiUser: '0',
+        //   weiToSell: channelState.balanceWeiUser,
+        //   withdrawalTokenUser: channelState.balanceTokenUser,
+        // };
       }
 
       return withdrawalVal;

@@ -2,14 +2,9 @@ import 'babel-polyfill';
 import * as Connext from 'connext';
 import { ethers as eth } from 'ethers';
 import Web3 from 'web3';
-import BN from 'bn.js';
-// import { CurrencyType } from 'connext/dist/state/ConnextState/CurrencyTypes';
-// import CurrencyConvertable from 'connext/dist/lib/currency/CurrencyConvertable';
+import interval from 'interval-promise';
 
-// import ProviderOptions from './utils/ProviderOptions';
-// import clientProvider from './utils/web3/clientProvider';
 import { getDollarSubstring } from './utils/getDollarSubstring';
-// import createWallet from './walletGen';
 import tokenAbi from './abi/humanToken.json';
 
 // set constants
@@ -22,20 +17,18 @@ const HUB_EXCHANGE_CEILING = eth.constants.WeiPerEther.mul(Big(69)); // 69 TST
 const CHANNEL_DEPOSIT_MAX = eth.constants.WeiPerEther.mul(Big(30)); // 30 TST
 
 const constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
+const CollateralStates = {
+  PaymentMade: 0,
+  Timeout: 1,
+  Success: 2,
+};
 
-const validateAmount = value => {
-  value = value.toString();
-  console.log('value', value)
-  console.log('typeof', typeof value)
-  // if there are more than 18 digits after the decimal, do not
-  // count them.
-  // throw a warning in the address error
-  // let balanceError = null
+const validateAmount = ogValue => {
+  const value = ogValue.toString();
   const decimal = value.startsWith('.') ? value.substr(1) : value.split('.')[1];
 
-  // let tokenVal = value;
+  // if there are more than 18 digits after the decimal, do not count them
   if (decimal && decimal.length > 18) {
-    // tokenVal = value.startsWith('.') ? value.substr(0, 19) : `${value.split('.')[0]}.${decimal.substr(0, 18)}`;
     throw new Error('Value is too precise. Please keep it to maximum 18 decimal points');
     // balanceError = `Value too precise! Using ${tokenVal}`
   } else return Web3.utils.toWei(`${value}`, 'ether');
@@ -67,11 +60,7 @@ class Card {
   async init(existingMnemonic) {
     // check if mnemonic is passed or exists in LS
     const mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || eth.Wallet.createRandom().mnemonic;
-
-    // otherwise generate wallet in create wallet
-    // const delegateSigner = await createWallet(mnemonic);
-    // const address = await delegateSigner.getAddressString();
-    // this.address = address;
+    if (!localStorage.getItem('mnemonic')) localStorage.setItem('mnemonic', mnemonic);
 
     // set up web3 and connext
     await this.setWeb3();
@@ -91,13 +80,8 @@ class Card {
   //                State setters                      //
   // ************************************************* //
   async setWeb3() {
-    // async setWeb3(delegateSigner) {
     const provider = new eth.providers.JsonRpcProvider(this.rpcProvider);
     this.web3 = provider;
-    // const providerOpts = new ProviderOptions(delegateSigner, this.rpcProvider, this.hubUrl).approving();
-    // const provider = clientProvider(providerOpts);
-    // const customWeb3 = new Web3(provider);
-    // this.web3 = customWeb3;
   }
 
   async setConnext(mnemonic) {
@@ -176,13 +160,6 @@ class Card {
     const { web3, connextState } = this;
     if (!web3 || !connextState) return;
 
-    // const defaultGas = new BN(await web3.eth.getGasPrice())
-    // default connext multiple is 1.5, leave 2x for safety
-    // const depositGasPrice = DEPOSIT_ESTIMATED_GAS.multipliedBy(new BigNumber(2)).multipliedBy(defaultGas);
-    // add dai conversion
-    // const minConvertable = new CurrencyConvertable(CurrencyType.WEI, depositGasPrice, () => getExchangeRates(connextState));
-
-
     const gasPrice = await this.web3.getGasPrice();
 
     // default connext multiple is 1.5, leave 2x for safety
@@ -192,8 +169,6 @@ class Card {
     this.maxDeposit = Connext.Currency.DEI(CHANNEL_DEPOSIT_MAX, () => getExchangeRates(connextState));
   }
 
-  // TODO: figure out why after proposing a deposit
-  // it halts awaiting a confirm
   async autoDeposit() {
     const { address, tokenContract, connextState, tokenAddress, rpcProvider, web3, minDeposit } = this;
     if (!rpcProvider || !minDeposit) return;
@@ -267,7 +242,7 @@ class Card {
 
   async generateRedeemableLink(value) {
     const { connext } = this;
-    if (Number.isNaN(value)) throw new Error('Value is not a number');
+    if (isNaN(value)) throw new Error('Value is not a number');
     value = this.validateAmount(value);
 
     // generate secret, set type, and set
@@ -289,7 +264,7 @@ class Card {
   }
 
   async generatePayment(value, recipientAddress) {
-    if (Number.isNaN(value)) throw new Error('Value is not a number');
+    if (isNaN(value)) throw new Error('Value is not a number');
     value = this.validateAmount(value);
 
     // generate secret, set type, and set
@@ -297,7 +272,7 @@ class Card {
       meta: { purchaseId: 'ujo' },
       payments: [
         {
-          type: 'PT_OPTIMISTIC',
+          type: 'PT_OPTIMISTIC', // only optimistic for now 'PT_CHANNEL',
           recipient: recipientAddress,
           amountToken: value,
           amountWei: '0',
@@ -314,16 +289,6 @@ class Card {
   // otherwise throws an error
   async paymentHandler(paymentVal) {
     const { connext, channelState } = this;
-
-    // check if the recipient needs collateral
-    // is utilized later in fn. Consider in a v2
-    const needsCollateral = await connext.recipientNeedsCollateral(
-      paymentVal.payments[0].recipient,
-      convertPayment('str', {
-        amountWei: paymentVal.payments[0].amountWei,
-        amountToken: paymentVal.payments[0].amountToken
-      }),
-    );
 
     let balanceError;
     let addressError;
@@ -342,7 +307,7 @@ class Card {
     // TODO: handle in other functions that structure payment object
     const { recipient } = paymentVal.payments[0];
     if (!Web3.utils.isAddress(recipient) && recipient !== emptyAddress) {
-      addressError = 'Please choose a valid address';
+      addressError = 'Please use a valid address';
     }
 
     // return if either errors exist
@@ -351,16 +316,45 @@ class Card {
       throw new Error(errorMessage);
     }
 
-    // comment back in later if needed
-    // if (needsCollateral && payment.payments[0].type !== 'PT_LINK') {
-    //   try {
-    //     await this.tryToCollateralize(payment);
-    //   } catch (e) {
-    //     throw e;
-    //   }
-    // }
+    // check if the recipient needs collateral
+    // is utilized later in fn. Consider in a v2
+    const needsCollateral = await connext.recipientNeedsCollateral(
+      paymentVal.payments[0].recipient,
+      convertPayment('str', {
+        amountWei: paymentVal.payments[0].amountWei,
+        amountToken: paymentVal.payments[0].amountToken,
+      }),
+    );
 
-    // otherwise make payment
+    // collateralize recipient if not a link payment
+    // not used now as we do optimistic payments
+    if (needsCollateral && paymentVal.payments[0].type !== 'PT_LINK') {
+      // this can have 3 potential outcomes:
+      // - collateralization failed (return)
+      // - payment succeeded (return)
+      // - channel collateralized
+      const collateralizationStatus = await this.collateralizeRecipient(paymentVal);
+      switch (collateralizationStatus) {
+        // setting state for these cases done in collateralize
+        case CollateralStates.PaymentMade:
+          return true;
+        case CollateralStates.Timeout:
+          throw new Error('Collateralization of recipient timed out. Please try again.');
+          // return;
+        case CollateralStates.Success:
+          return await this.sendPayment(paymentVal);
+        default:
+          console.log('GOT In DEFAULT')
+          return await this.sendPayment(paymentVal);
+      }
+    } else {
+      return await this.sendPayment(paymentVal);
+    }
+  }
+
+  async sendPayment(paymentVal) {
+    const { connext } = this;
+
     try {
       let paymentRes = await connext.buy(paymentVal);
       // console.log(`Payment result: ${JSON.stringify(paymentRes, null, 2)}`);
@@ -374,69 +368,41 @@ class Card {
     }
   }
 
-  async collateralizeRecipient(payment) {
+  async collateralizeRecipient(paymentVal) {
     const { connext } = this;
-    // do not collateralize on pt link payments
-    if (payment.payments[0].type === 'PT_LINK') return;
 
     // collateralize by sending payment
-    // const err = await this._sendPayment(payment, true);
-    const success = await connext.buy(payment);
-    // somehow it worked???
-    if (success) return;
+    try {
+      const success = await this.sendPayment(paymentVal);
+      // if success, return successful payment
+      if (success) return CollateralStates.PaymentMade;
+    }
+    catch (e) {
+      // do nothing
+    }
 
     // call to send payment failed, monitor collateral
     // watch for confirmation on the recipients side
     // of the channel for 20s
-    let needsCollateral
-    await setInterval(
+    let needsCollateral;
+    await interval(
       async (iteration, stop) => {
         // returns null if no collateral needed
         needsCollateral = await connext.recipientNeedsCollateral(
-          payment.payments[0].recipient,
-          convertPayment('str', payment.payments[0].amount)
+          paymentVal.payments[0].recipient,
+          convertPayment('str', {
+            amountWei: paymentVal.payments[0].amountWei,
+            amountToken: paymentVal.payments[0].amountToken,
+          }),
         );
         if (!needsCollateral || iteration > 20) {
           stop();
         }
-      },
-      5000,
-      { iterations: 20 }
+      }, 5000, { iterations: 20 }
     );
 
-    if (needsCollateral) {
-      this.setState({
-        showReceipt: true,
-        paymentState: PaymentStates.CollateralTimeout
-      });
-      return CollateralStates.Timeout;
-    }
-
+    if (needsCollateral) return CollateralStates.Timeout;
     return CollateralStates.Success;
-  }
-
-  // not utilized yet
-  tryToCollateralize(payment) {
-    const { connext } = this;
-    let iteration = 0;
-    return new Promise((res, rej) => {
-      const collateralizeInterval = setInterval(async () => {
-        console.log('interval', iteration);
-        const needsCollateral = await connext.recipientNeedsCollateral(
-          payment.payments[0].recipient,
-          convertPayment('str', payment.payments[0].amount),
-        );
-        if (!needsCollateral) {
-          console.log('successfulyl collateralized')
-          res(true);
-          clearInterval(collateralizeInterval);
-        } else if (iteration >= 20) {
-          rej(new Error('Unable to collateralize'));
-          clearInterval(collateralizeInterval);
-        }
-        iteration += 1;
-      }, 5000);
-    });
   }
 
   async redeemPayment(secret) {
@@ -458,31 +424,22 @@ class Card {
   //                 Withdraw Funds                    //
   // ************************************************* //
   async withdrawalAllFunds(originalRecipient, withdrawEth = true) {
+    // TODO: add value to withdraw and check the input balance is under channel balance
     const { connext } = this;
     const recipient = originalRecipient.toLowerCase();
 
+    // check for valid address
     if (!eth.utils.isHexString(recipient)) {
-      throw new Error(`Invalid hex string: ${originalRecipient}`);
+      throw new Error(`Invalid recipient. Invalid hex string: ${originalRecipient}`);
     }
     if (eth.utils.arrayify(recipient).length !== 20) {
-      throw new Error(`Invalid length: ${originalRecipient}`);
+      throw new Error(`Invalid recipient. Invalid length: ${originalRecipient}`);
     }
 
     const withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
 
-    // // check for valid address
-    // // let addressError = null
-    // // let balanceError = null
-    // if (!Web3.utils.isAddress(recipient)) {
-    //   throw new Error(`${withdrawalVal.recipient} is not a valid address`);
-    // }
-
-    // TODO: check the input balance is under channel balance
-    // TODO: allow partial withdrawals?
-
     console.log(`Withdrawing: ${JSON.stringify(withdrawalVal, null, 2)}`);
     await connext.withdraw(withdrawalVal);
-    // this.poller();
   }
 
   createWithdrawValues(recipient, withdrawEth) {
