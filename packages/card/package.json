@@ -11,24 +11,27 @@
     "/dist"
   ],
   "dependencies": {
+    "@babel/cli": "^7.0.0",
     "axios": "^0.18.0",
+    "babel-core": "7.0.0-bridge.0",
     "babel-polyfill": "^6.26.0",
     "bignumber.js": "^8.0.1",
     "bip39": "2.3.1",
     "bn.js": "^4.11.8",
-    "connext": "3.0.18",
+    "connext": "^4.1.6",
     "eth-sig-util": "^2.1.0",
     "ethereum-blockies-png": "^0.1.3",
     "ethereumjs-tx": "^1.3.7",
     "ethereumjs-util": "5.2.0",
     "ethereumjs-wallet": "0.6.0",
-    "ethers": "^4.0.20",
+    "ethers": "^4.0.26",
+    "interval-promise": "^1.3.0",
     "web3": "=1.0.0-beta.36",
     "web3-provider-engine": "13.6.6"
   },
   "devDependencies": {
-    "babel-polyfill": "^6.26.0",
+    "@babel/polyfill": "^7.0.0",
     "dotenv": "^6.2.0"
   },
-  "gitHead": "a155d66af77943b49c553139970ee36f4faaf6ef"
+  "gitHead": "0bc8d8ff9181775d64daf1b50143e2c73fe0185f"
 }
