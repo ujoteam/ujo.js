@@ -29,6 +29,8 @@ var _ethers = require("ethers");
 
 var _web = _interopRequireDefault(require("web3"));
 
+var _intervalPromise = _interopRequireDefault(require("interval-promise"));
+
 var _getDollarSubstring = require("./utils/getDollarSubstring");
 
 var _humanToken = _interopRequireDefault(require("./abi/humanToken.json"));
@@ -53,6 +55,11 @@ var CHANNEL_DEPOSIT_MAX = _ethers.ethers.constants.WeiPerEther.mul(Big(30)); // 
 
 
 var constructorError = 'Card constructor takes one object as an argument with "hubUrl", "rpcProvider", and "onStateUpdate" as properties.';
+var CollateralStates = {
+  PaymentMade: 0,
+  Timeout: 1,
+  Success: 2
+};
 
 var validateAmount = function validateAmount(ogValue) {
   var value = ogValue.toString();
@@ -98,35 +105,36 @@ function () {
             switch (_context.prev = _context.next) {
               case 0:
                 // check if mnemonic is passed or exists in LS
-                mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || _ethers.ethers.Wallet.createRandom().mnemonic; // set up web3 and connext
+                mnemonic = existingMnemonic || localStorage.getItem('mnemonic') || _ethers.ethers.Wallet.createRandom().mnemonic;
+                if (!localStorage.getItem('mnemonic')) localStorage.setItem('mnemonic', mnemonic); // set up web3 and connext
 
-                _context.next = 3;
+                _context.next = 4;
                 return this.setWeb3();
 
-              case 3:
-                _context.next = 5;
+              case 4:
+                _context.next = 6;
                 return this.setConnext(mnemonic);
 
-              case 5:
-                _context.next = 7;
+              case 6:
+                _context.next = 8;
                 return this.setTokenContract();
 
-              case 7:
-                _context.next = 9;
+              case 8:
+                _context.next = 10;
                 return this.pollConnextState();
 
-              case 9:
-                _context.next = 11;
+              case 10:
+                _context.next = 12;
                 return this.setBrowserWalletMinimumBalance();
 
-              case 11:
-                _context.next = 13;
+              case 12:
+                _context.next = 14;
                 return this.poller();
 
-              case 13:
+              case 14:
                 return _context.abrupt("return", this.address);
 
-              case 14:
+              case 15:
               case "end":
                 return _context.stop();
             }
@@ -615,7 +623,7 @@ function () {
               case 0:
                 connext = this.connext;
 
-                if (!Number.isNaN(value)) {
+                if (!isNaN(value)) {
                   _context12.next = 3;
                   break;
                 }
@@ -667,7 +675,7 @@ function () {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
-                if (!Number.isNaN(value)) {
+                if (!isNaN(value)) {
                   _context13.next = 2;
                   break;
                 }
@@ -683,6 +691,7 @@ function () {
                   },
                   payments: [{
                     type: 'PT_OPTIMISTIC',
+                    // only optimistic for now 'PT_CHANNEL',
                     recipient: recipientAddress,
                     amountToken: value,
                     amountWei: '0'
@@ -718,22 +727,12 @@ function () {
       var _paymentHandler = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
       _regenerator.default.mark(function _callee14(paymentVal) {
-        var connext, channelState, needsCollateral, balanceError, addressError, paymentAmount, recipient, errorMessage, paymentRes;
+        var connext, channelState, balanceError, addressError, paymentAmount, recipient, errorMessage, needsCollateral, collateralizationStatus;
         return _regenerator.default.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
               case 0:
-                connext = this.connext, channelState = this.channelState; // check if the recipient needs collateral
-                // is utilized later in fn. Consider in a v2
-
-                _context14.next = 3;
-                return connext.recipientNeedsCollateral(paymentVal.payments[0].recipient, convertPayment('str', {
-                  amountWei: paymentVal.payments[0].amountWei,
-                  amountToken: paymentVal.payments[0].amountToken
-                }));
-
-              case 3:
-                needsCollateral = _context14.sent;
+                connext = this.connext, channelState = this.channelState;
                 // validate that the token amount is within bounds
                 paymentAmount = convertPayment('bn', paymentVal.payments[0]);
 
@@ -750,48 +749,80 @@ function () {
                 recipient = paymentVal.payments[0].recipient;
 
                 if (!_web.default.utils.isAddress(recipient) && recipient !== emptyAddress) {
-                  addressError = 'Please choose a valid address';
+                  addressError = 'Please use a valid address';
                 } // return if either errors exist
 
 
                 if (!(balanceError || addressError)) {
-                  _context14.next = 12;
+                  _context14.next = 9;
                   break;
                 }
 
                 errorMessage = balanceError || addressError;
                 throw new Error(errorMessage);
 
-              case 12:
-                _context14.prev = 12;
-                _context14.next = 15;
-                return connext.buy(paymentVal);
+              case 9:
+                _context14.next = 11;
+                return connext.recipientNeedsCollateral(paymentVal.payments[0].recipient, convertPayment('str', {
+                  amountWei: paymentVal.payments[0].amountWei,
+                  amountToken: paymentVal.payments[0].amountToken
+                }));
 
-              case 15:
-                paymentRes = _context14.sent;
+              case 11:
+                needsCollateral = _context14.sent;
 
-                if (!(paymentVal.payments[0].type === 'PT_LINK')) {
-                  _context14.next = 18;
+                if (!(needsCollateral && paymentVal.payments[0].type !== 'PT_LINK')) {
+                  _context14.next = 30;
                   break;
                 }
 
-                return _context14.abrupt("return", paymentVal.payments[0].meta.secret);
+                _context14.next = 15;
+                return this.collateralizeRecipient(paymentVal);
 
-              case 18:
+              case 15:
+                collateralizationStatus = _context14.sent;
+                _context14.t0 = collateralizationStatus;
+                _context14.next = _context14.t0 === CollateralStates.PaymentMade ? 19 : _context14.t0 === CollateralStates.Timeout ? 20 : _context14.t0 === CollateralStates.Success ? 21 : 24;
+                break;
+
+              case 19:
                 return _context14.abrupt("return", true);
 
-              case 21:
-                _context14.prev = 21;
-                _context14.t0 = _context14["catch"](12);
-                console.log('error with payment', _context14.t0);
-                throw new Error(_context14.t0);
+              case 20:
+                throw new Error('Collateralization of recipient timed out. Please try again.');
 
-              case 25:
+              case 21:
+                _context14.next = 23;
+                return this.sendPayment(paymentVal);
+
+              case 23:
+                return _context14.abrupt("return", _context14.sent);
+
+              case 24:
+                console.log('GOT In DEFAULT');
+                _context14.next = 27;
+                return this.sendPayment(paymentVal);
+
+              case 27:
+                return _context14.abrupt("return", _context14.sent);
+
+              case 28:
+                _context14.next = 33;
+                break;
+
+              case 30:
+                _context14.next = 32;
+                return this.sendPayment(paymentVal);
+
+              case 32:
+                return _context14.abrupt("return", _context14.sent);
+
+              case 33:
               case "end":
                 return _context14.stop();
             }
           }
-        }, _callee14, this, [[12, 21]]);
+        }, _callee14, this);
       }));
 
       function paymentHandler(_x6) {
@@ -801,56 +832,109 @@ function () {
       return paymentHandler;
     }()
   }, {
+    key: "sendPayment",
+    value: function () {
+      var _sendPayment = (0, _asyncToGenerator2.default)(
+      /*#__PURE__*/
+      _regenerator.default.mark(function _callee15(paymentVal) {
+        var connext, paymentRes;
+        return _regenerator.default.wrap(function _callee15$(_context15) {
+          while (1) {
+            switch (_context15.prev = _context15.next) {
+              case 0:
+                connext = this.connext;
+                _context15.prev = 1;
+                _context15.next = 4;
+                return connext.buy(paymentVal);
+
+              case 4:
+                paymentRes = _context15.sent;
+
+                if (!(paymentVal.payments[0].type === 'PT_LINK')) {
+                  _context15.next = 7;
+                  break;
+                }
+
+                return _context15.abrupt("return", paymentVal.payments[0].meta.secret);
+
+              case 7:
+                return _context15.abrupt("return", true);
+
+              case 10:
+                _context15.prev = 10;
+                _context15.t0 = _context15["catch"](1);
+                console.log('error with payment', _context15.t0);
+                throw new Error(_context15.t0);
+
+              case 14:
+              case "end":
+                return _context15.stop();
+            }
+          }
+        }, _callee15, this, [[1, 10]]);
+      }));
+
+      function sendPayment(_x7) {
+        return _sendPayment.apply(this, arguments);
+      }
+
+      return sendPayment;
+    }()
+  }, {
     key: "collateralizeRecipient",
     value: function () {
       var _collateralizeRecipient = (0, _asyncToGenerator2.default)(
       /*#__PURE__*/
-      _regenerator.default.mark(function _callee16(payment) {
+      _regenerator.default.mark(function _callee17(paymentVal) {
         var connext, success, needsCollateral;
-        return _regenerator.default.wrap(function _callee16$(_context16) {
+        return _regenerator.default.wrap(function _callee17$(_context17) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
-                connext = this.connext; // do not collateralize on pt link payments
+                connext = this.connext; // collateralize by sending payment
 
-                if (!(payment.payments[0].type === 'PT_LINK')) {
-                  _context16.next = 3;
-                  break;
-                }
+                _context17.prev = 1;
+                _context17.next = 4;
+                return this.sendPayment(paymentVal);
 
-                return _context16.abrupt("return");
-
-              case 3:
-                _context16.next = 5;
-                return connext.buy(payment);
-
-              case 5:
-                success = _context16.sent;
+              case 4:
+                success = _context17.sent;
 
                 if (!success) {
-                  _context16.next = 8;
+                  _context17.next = 7;
                   break;
                 }
 
-                return _context16.abrupt("return");
+                return _context17.abrupt("return", CollateralStates.PaymentMade);
 
-              case 8:
-                _context16.next = 10;
-                return setInterval(
+              case 7:
+                _context17.next = 11;
+                break;
+
+              case 9:
+                _context17.prev = 9;
+                _context17.t0 = _context17["catch"](1);
+
+              case 11:
+                _context17.next = 13;
+                return (0, _intervalPromise.default)(
                 /*#__PURE__*/
                 function () {
                   var _ref4 = (0, _asyncToGenerator2.default)(
                   /*#__PURE__*/
-                  _regenerator.default.mark(function _callee15(iteration, stop) {
-                    return _regenerator.default.wrap(function _callee15$(_context15) {
+                  _regenerator.default.mark(function _callee16(iteration, stop) {
+                    return _regenerator.default.wrap(function _callee16$(_context16) {
                       while (1) {
-                        switch (_context15.prev = _context15.next) {
+                        switch (_context16.prev = _context16.next) {
                           case 0:
-                            _context15.next = 2;
-                            return connext.recipientNeedsCollateral(payment.payments[0].recipient, convertPayment('str', payment.payments[0].amount));
+                            _context16.next = 2;
+                            return connext.recipientNeedsCollateral(paymentVal.payments[0].recipient, convertPayment('str', {
+                              amountWei: paymentVal.payments[0].amountWei,
+                              amountToken: paymentVal.payments[0].amountToken
+                            }));
 
                           case 2:
-                            needsCollateral = _context15.sent;
+                            needsCollateral = _context16.sent;
 
                             if (!needsCollateral || iteration > 20) {
                               stop();
@@ -858,92 +942,44 @@ function () {
 
                           case 4:
                           case "end":
-                            return _context15.stop();
+                            return _context16.stop();
                         }
                       }
-                    }, _callee15);
+                    }, _callee16);
                   }));
 
-                  return function (_x8, _x9) {
+                  return function (_x9, _x10) {
                     return _ref4.apply(this, arguments);
                   };
                 }(), 5000, {
                   iterations: 20
                 });
 
-              case 10:
+              case 13:
                 if (!needsCollateral) {
-                  _context16.next = 13;
+                  _context17.next = 15;
                   break;
                 }
 
-                this.setState({
-                  showReceipt: true,
-                  paymentState: PaymentStates.CollateralTimeout
-                });
-                return _context16.abrupt("return", CollateralStates.Timeout);
+                return _context17.abrupt("return", CollateralStates.Timeout);
 
-              case 13:
-                return _context16.abrupt("return", CollateralStates.Success);
+              case 15:
+                return _context17.abrupt("return", CollateralStates.Success);
 
-              case 14:
+              case 16:
               case "end":
-                return _context16.stop();
+                return _context17.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee17, this, [[1, 9]]);
       }));
 
-      function collateralizeRecipient(_x7) {
+      function collateralizeRecipient(_x8) {
         return _collateralizeRecipient.apply(this, arguments);
       }
 
       return collateralizeRecipient;
-    }() // not utilized yet
-
-  }, {
-    key: "tryToCollateralize",
-    value: function tryToCollateralize(payment) {
-      var connext = this.connext;
-      var iteration = 0;
-      return new Promise(function (res, rej) {
-        var collateralizeInterval = setInterval(
-        /*#__PURE__*/
-        (0, _asyncToGenerator2.default)(
-        /*#__PURE__*/
-        _regenerator.default.mark(function _callee17() {
-          var needsCollateral;
-          return _regenerator.default.wrap(function _callee17$(_context17) {
-            while (1) {
-              switch (_context17.prev = _context17.next) {
-                case 0:
-                  console.log('interval', iteration);
-                  _context17.next = 3;
-                  return connext.recipientNeedsCollateral(payment.payments[0].recipient, convertPayment('str', payment.payments[0].amount));
-
-                case 3:
-                  needsCollateral = _context17.sent;
-
-                  if (!needsCollateral) {
-                    console.log('successfulyl collateralized');
-                    res(true);
-                    clearInterval(collateralizeInterval);
-                  } else if (iteration >= 20) {
-                    rej(new Error('Unable to collateralize'));
-                    clearInterval(collateralizeInterval);
-                  }
-
-                  iteration += 1;
-
-                case 6:
-                case "end":
-                  return _context17.stop();
-              }
-            }
-          }, _callee17);
-        })), 5000);
-      });
-    }
+    }()
   }, {
     key: "redeemPayment",
     value: function () {
@@ -989,7 +1025,7 @@ function () {
         }, _callee18, this, [[5, 9]]);
       }));
 
-      function redeemPayment(_x10) {
+      function redeemPayment(_x11) {
         return _redeemPayment.apply(this, arguments);
       }
 
@@ -1014,15 +1050,16 @@ function () {
             switch (_context19.prev = _context19.next) {
               case 0:
                 withdrawEth = _args19.length > 1 && _args19[1] !== undefined ? _args19[1] : true;
+                // TODO: add value to withdraw and check the input balance is under channel balance
                 connext = this.connext;
-                recipient = originalRecipient.toLowerCase();
+                recipient = originalRecipient.toLowerCase(); // check for valid address
 
                 if (_ethers.ethers.utils.isHexString(recipient)) {
                   _context19.next = 5;
                   break;
                 }
 
-                throw new Error("Invalid hex string: ".concat(originalRecipient));
+                throw new Error("Invalid recipient. Invalid hex string: ".concat(originalRecipient));
 
               case 5:
                 if (!(_ethers.ethers.utils.arrayify(recipient).length !== 20)) {
@@ -1030,17 +1067,10 @@ function () {
                   break;
                 }
 
-                throw new Error("Invalid length: ".concat(originalRecipient));
+                throw new Error("Invalid recipient. Invalid length: ".concat(originalRecipient));
 
               case 7:
-                withdrawalVal = this.createWithdrawValues(recipient, withdrawEth); // // check for valid address
-                // // let addressError = null
-                // // let balanceError = null
-                // if (!Web3.utils.isAddress(recipient)) {
-                //   throw new Error(`${withdrawalVal.recipient} is not a valid address`);
-                // }
-                // TODO: check the input balance is under channel balance
-
+                withdrawalVal = this.createWithdrawValues(recipient, withdrawEth);
                 console.log("Withdrawing: ".concat(JSON.stringify(withdrawalVal, null, 2)));
                 _context19.next = 11;
                 return connext.withdraw(withdrawalVal);
@@ -1053,7 +1083,7 @@ function () {
         }, _callee19, this);
       }));
 
-      function withdrawalAllFunds(_x11) {
+      function withdrawalAllFunds(_x12) {
         return _withdrawalAllFunds.apply(this, arguments);
       }
 
